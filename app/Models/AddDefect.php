@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class AddDefect extends Model
 {
+    protected $connection = 'sqlsrv';
         protected $table = "HFDefect";
    public $timestamps = false;
     protected $primaryKey = 'RecNo';
