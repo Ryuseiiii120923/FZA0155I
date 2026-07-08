@@ -32,6 +32,7 @@ new class extends Component
     #[On('confirm-ppf')]
     public function checkPPF(int $ppf = 0, int $encoder = 0, bool $readonly = false, string $action = 'add')
     {
+        $encoder = Auth::user()->社員CD;
         $this->action = $action;
         $this->ppf = ($ppf != 0) ? $ppf : $this->ppf;
         $result = app(PPFService::class)->fetchMainData($this->ppf, $action);
@@ -47,20 +48,15 @@ new class extends Component
         $this->syncDraft();
         $this->dispatch('ppf-checked', ppf: $this->ppf, encoder: $encoder);
         if ($encoder !== 0) {
-
             $this->dispatch('edit-ppf', ppf: $this->ppf, encoder: $encoder, readonly: $readonly);
         }
     }
 
     #[On('post-ppf')]
-    public function checkPPFQR()
+    public function checkPPFQR(string $ppf)
     {
-        $ppf = $this->ppf; // fallback
-        if (request()->has('ppf')) {
-            $ppf = request()->input('ppf');
-        }
         $this->ppf = (int) $ppf;
-        $this->checkPPF($this->ppf);
+        $this->checkPPF(ppf: $this->ppf);
     }
 
     public function acceptProgressQty()
