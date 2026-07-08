@@ -63,7 +63,7 @@ new class extends Component
             'hf_name'            => '',
             'finishingProcedure' => '',
             'total_inspect'      => '',
-            'open'               => false,
+            'open'               => true,
             'defects'            => [],
             'smallDefects'       => [],
             'rework'             => [],
@@ -79,6 +79,8 @@ new class extends Component
         $this->modalOpen[$formId] = true;
         $this->modalMode[$formId] = 'add';
         $this->resetModalFields();
+
+        $this->dispatch('scroll-to-form', formId: $formId);
     }
 
     public function toggle(string $formId): void
