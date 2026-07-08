@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Employee extends Authenticable
 {
+
     protected $table = 'PASWORD';
     protected $primaryKey = '社員CD';
     public $incrementing = true;
@@ -16,7 +17,7 @@ class Employee extends Authenticable
         'PASSWORD',
         '名前'
     ];
-     protected $hidden = [
+    protected $hidden = [
         'PASSWORD',
     ];
     public function getAuthIdentifierName()

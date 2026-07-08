@@ -25,7 +25,7 @@ class MasterDataPRRepository
     public function upsertGeneralForm(array $form){
         return MasterData::upsert(
             $form,
-            ['inspectorId', 'ppfno'],
+            ['inspectorId', 'ppfno','operation','updated_by'],
             ['total_inspect', 'totalNg', 'totalRework', 'totalGood','updated_at']);
     }
 

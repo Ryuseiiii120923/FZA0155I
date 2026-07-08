@@ -6,5 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class CheckHF extends Model
 {
-    protected $table = "計量１";
+    protected $connection = 'sqlsrv';
+    protected $table = "成形実績";
 }

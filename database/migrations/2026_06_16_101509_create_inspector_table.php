@@ -20,6 +20,7 @@ return new class extends Migration
             $table->integer('qty');
             $table->string('process', 30);
             $table->string('operation', 30);
+            $table->string('updated_by',10);
             $table->timestamps();
         });
         Schema::connection('PRecord')->create('inspector_small', function (Blueprint $table) {
@@ -31,6 +32,7 @@ return new class extends Migration
             $table->integer('qty');
             $table->string('process', 30);
             $table->string('operation', 30);
+            $table->string('updated_by',10);
             $table->timestamps();
         });
         Schema::connection('PRecord')->create('inspector_pr', function (Blueprint $table) {
@@ -43,11 +45,13 @@ return new class extends Migration
             $table->integer('totalGood');
             $table->string('process', 30)->index();
             $table->string('operation', 30)->index();
+            $table->string('updated_by',10);
             $table->timestamps();
         });
           Schema::connection('PRecord')->create('inspector_rework', function (Blueprint $table) {
             $table->id();
             $table->integer('ppfno')->index();
+            $table->string('hfno', 10)->index();
             $table->string('inspectorId', 10)->index();
             $table->string('inspName', 50)->index();
             $table->string('rework', 50);
@@ -55,6 +59,7 @@ return new class extends Migration
             $table->integer('total_inspect');
             $table->string('process', 30)->index();
             $table->string('operation', 30)->index();
+            $table->string('updated_by',10);
             $table->timestamps();
         });
     }
@@ -64,6 +69,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('inspector');
+        Schema::connection('PRecord')->dropIfExists('inspector_rework');
+        Schema::connection('PRecord')->dropIfExists('inspector_small');
+        Schema::connection('PRecord')->dropIfExists('inspector_forms');
+        Schema::connection('PRecord')->dropIfExists('inspector_defect');
     }
 };

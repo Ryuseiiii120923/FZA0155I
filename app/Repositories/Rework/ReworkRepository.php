@@ -3,6 +3,7 @@
 namespace App\Repositories\Rework;
 
 use App\Models\Forms\Rework;
+use App\Models\HFDefectRWK;
 use App\Models\Inspector\Rework as InspectorRework;
 
 class ReworkRepository

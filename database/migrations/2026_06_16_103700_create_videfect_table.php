@@ -14,6 +14,8 @@ return new class extends Migration
        Schema::connection('PRecord')->create('vi_defect', function (Blueprint $table) {
             $table->id();
             $table->integer('ppfno')->index();
+            $table->string('hfid', 10)->index();
+            $table->string('inspId', 10)->index();
             $table->string('defect', 30);
             $table->integer('qty');
             $table->string('updated_by', 15);
@@ -23,6 +25,7 @@ return new class extends Migration
             $table->id();
             $table->integer('ppfno')->index();
             $table->string('hfid', 10)->index();
+            $table->string('inspId', 10)->index();
             $table->integer('total_inspect');
             $table->string('updated_by', 15);
             $table->string('formId', 100);
@@ -40,6 +43,7 @@ return new class extends Migration
             $table->id();
             $table->integer('ppfno')->index();
             $table->string('hfid', 10)->index();
+            $table->string('inspId', 10)->index();
             $table->string('largeDefect', 30);
             $table->string('smallDefect', 30);
             $table->integer('qty');
@@ -51,6 +55,7 @@ return new class extends Migration
             $table->id();
             $table->integer('ppfno');
             $table->string('hfid', 10);
+            $table->string('inspId', 10)->index();
             $table->string('rework_type', 30);
             $table->integer('qty');
             $table->string('updated_by', 15);
@@ -68,6 +73,9 @@ return new class extends Migration
      */
     public function down(): void
     {
-        
+        Schema::connection('PRecord')->dropIfExists('vi_rework');
+        Schema::connection('PRecord')->dropIfExists('vi_small');
+        Schema::connection('PRecord')->dropIfExists('vi_forms');
+        Schema::connection('PRecord')->dropIfExists('vi_defect');
     }
 };

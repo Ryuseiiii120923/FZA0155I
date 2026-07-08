@@ -18,6 +18,11 @@ class PPFService
 
     public function validateHeaderData(int $ppf, string $action): array
     {
+        $checkIfExist = $this->ppfRepo->isExistInMain($ppf);
+
+        if ($checkIfExist && $action == 'add') {
+            return ['error' => 'PPF already Encode.',];
+        }
         if ($ppf == null) {
       
             return ['error' => 'Please Enter PPF',];

@@ -4,11 +4,12 @@ namespace App\Repositories;
 
 use App\Models\AddDefect;
 use App\Models\HFGroup;
+use App\Repositories\Defect\DefectRepository;
 use Carbon\Carbon;
 
 class SaveRepository
 {
-    public function saveMain(int $ppf, array $header, array $defects, array $goodNg, array $otherDetails, array $inspection): bool
+    public function saveMain(int $ppf, array $header, array $defects, array $smallDefects, array $goodNg, array $otherDetails, array $inspection): bool
     {
         $inspectorCols = [
             'HFNo1' => $inspection['insp1'] ?? '',
@@ -19,22 +20,31 @@ class SaveRepository
         ];
 
         $hfGroup = [
-             'ppfno' => $ppf,
+            'ppfno' => $ppf,
             'hf_group' => $otherDetails['hfGroup'],
             'operation' => 'HF'
         ];
 
         HFGroup::upsert(
-        $hfGroup,
-        ['ppfno', 'operation'],
-        ['hf_group']
+            $hfGroup,
+            ['ppfno', 'operation'],
+            ['hf_group']
         );
 
         $rows = [];
-
+        $hfDefectRWKRows = [];
+        $hfDefectSmall = [];
         foreach ($defects as $defect) {
             $type = $defect['type'] ?? $defect['newDefect'] ?? null;
             $qty  = isset($defect['qty']) ? (float) $defect['qty'] : (float) ($defect['newQuan'] ?? 0);
+
+            $hfDefectRWKRows[] = [
+                'PPFNo' => (float) $ppf,
+                'Defect' => $type,
+                'Quantity' => $qty,
+                'TotalInspQty' => $header['expct'],
+                'HFNo' => $defect['operatorid'],
+            ];
 
             if (!$type || $qty <= 0) {
                 continue;
@@ -66,6 +76,30 @@ class SaveRepository
             ]);
         }
 
+        foreach ($smallDefects as $largeDefect => $processes) {
+            foreach ($processes as $process => $inspectors) {
+                foreach ($inspectors as $inspectorId => $smallDefectsList) {
+                    foreach ($smallDefectsList as $smallDefect) {
+                        $hfDefectSmall[] = [
+                            'PPFNo' => (float) $ppf,
+                            'LargeDefect' => $largeDefect,
+                            'SmallDefect' => $smallDefect['type'],
+                            'Qty' => (float) $smallDefect['qty'],
+                            'dFlg' => 'HF'
+                        ];
+                    }
+                }
+            }
+        }
+
+        if (!empty($hfDefectSmall)) {
+            app(DefectRepository::class)->saveHfDefectSmall($hfDefectSmall);
+        }
+
+        if (!empty($hfDefectRWKRows)) {
+            app(DefectRepository::class)->saveHfDefectRWK($hfDefectRWKRows);
+        }
+
         if (empty($rows)) {
             return false;
         }
@@ -73,11 +107,14 @@ class SaveRepository
         return AddDefect::insert($rows);
     }
 
-    public function deleteMain(int $ppf){
+    public function deleteMain(int $ppf)
+    {
         $deleteMain = AddDefect::where('PPFNo', $ppf)->delete();
+        $deleteSmall = app(DefectRepository::class)->deleteHfDefectSmall($ppf);
 
-        return[
-            $deleteMain
+        return [
+            $deleteMain,
+            $deleteSmall
         ];
     }
 }

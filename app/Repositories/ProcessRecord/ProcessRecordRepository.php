@@ -15,10 +15,11 @@ use Illuminate\Support\Facades\DB;
 class ProcessRecordRepository
 {
     public function getProcessRecordData(int $inspectorId, int $perPage = 5, $search = null){
-        return MasterData::where('inspectorId', $inspectorId)
+        return MasterData::where('updated_by', $inspectorId)
         ->when($search, function ($query, $search) {
             $query->where('ppfno', 'like', "%{$search}%");
         })
+        ->where('operation', 'HF')
         ->orderBy('created_at', 'desc')
         ->paginate($perPage);
     }
@@ -58,10 +59,10 @@ class ProcessRecordRepository
             Rework::where('ppfno',$ppf)->where('updated_by', $encoder)->delete();
             SmallDefect::where('ppfno', $ppf)->where('updated_by', $encoder)->delete();
             //General Data
-            LargeDefect::where('ppfno', $ppf)->where('inspectorId', $encoder)->delete();
-            MasterData::where('ppfno', $ppf)->where('inspectorId', $encoder)->delete();
-            InspectorRework::where('ppfno',$ppf)->where('inspectorId',$encoder)->delete();
-            InspectorSmallDefect::where('ppfno', $ppf)->where('inspectorId', $encoder)->delete();
+            LargeDefect::where('ppfno', $ppf)->where('updated_by', $encoder)->where('operation', 'HF')->delete();
+            MasterData::where('ppfno', $ppf)->where('updated_by', $encoder)->where('operation', 'HF')->delete();
+            InspectorRework::where('ppfno',$ppf)->where('updated_by',$encoder)->where('operation', 'HF')->delete();
+            InspectorSmallDefect::where('ppfno', $ppf)->where('updated_by', $encoder)->where('operation', 'HF')->delete();
          });
 
     }

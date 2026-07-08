@@ -56,6 +56,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::connection('PRecord')->dropIfExists('hfrw_small');
+        Schema::connection('PRecord')->dropIfExists('hfrw_forms');
+        Schema::connection('PRecord')->dropIfExists('hfrw_defect');
     }
 };

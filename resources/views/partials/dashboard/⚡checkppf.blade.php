@@ -81,6 +81,8 @@ new class extends Component
             'shift'  => $this->shift,
             'opt'    => $this->opt,
             'expct'  => $this->expct,
+            'totalInspected' => $this->totalInspected,
+            'ppfno' => $this->ppf,
         ]);
     }
 

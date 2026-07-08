@@ -96,6 +96,7 @@ new class extends Component
             </thead>
             <tbody class="bg-gray-700">
                 @forelse($this->ppfdata as $data)
+                
                 <tr>
                     <td class="px-4 py-2 text-center">{{ (int)$data->ppfno }}</td>
                     <td class="px-4 py-2 text-center">{{ (int)$data->total_inspect }} / {{ $data->expct }}</td>

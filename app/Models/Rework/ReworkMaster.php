@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ReworkMaster extends Model
 {
+    
      protected $table="RWKDefectType";
     public $incrementing = false;
     public $timestamps = false;

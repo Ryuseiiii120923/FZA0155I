@@ -6,8 +6,10 @@ use App\Models\Defect\DefectMaster;
 use App\Models\Defect\SmallDefectMaster;
 use App\Models\Forms\Defect;
 use App\Models\Forms\SmallDefect;
+use App\Models\HFDefectRWK;
 use App\Models\Inspector\LargeDefect;
 use App\Models\Inspector\SmallDefect as InspectorSmallDefect;
+use App\Models\mainDb\DefectSmall;
 use Illuminate\Support\Collection;
 
 class DefectRepository
@@ -84,6 +86,27 @@ class DefectRepository
         ['ppfno', 'inspectorId', 'small_defect', 'large_defect', 'process', 'operation'],
         ['qty', 'updated_at']
         );
+    }
+
+     public function saveHfDefectRWK(array $form){
+    
+        return HFDefectRWK::upsert(
+            $form,
+            ['PPFNo', 'HFNo', 'Defect'],
+            [ 'Quantity', 'TotalInspQty']
+        );
+    }
+
+    public function saveHfDefectSmall(array $form){
+        return DefectSmall::upsert(
+            $form,
+            ['PPFNo', 'LargeDefect', 'SmallDefect', 'dFlg'],
+            ['Qty']
+        );
+    }
+
+    public function deleteHfDefectSmall(int $ppf){
+        return DefectSmall::where('PPFNo', $ppf)->where('dFlg', 'HF')->delete();
     }
 
 }

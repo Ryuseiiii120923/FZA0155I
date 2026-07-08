@@ -13,6 +13,7 @@ class PPFConfirmRepository
     public function fetchData(?string $search = null, int $perPage = 20)
     {
         $paginated = MasterData::select('ppfno')
+        ->Where('operation', 'HF')
             ->selectRaw('SUM(total_inspect) as total_inspect')
             ->selectRaw('MAX(updated_at) as updated_at')
             ->whereNotExists(function ($query) {
@@ -41,7 +42,7 @@ class PPFConfirmRepository
 
         $paginated->getCollection()->transform(function ($item) use ($checkHF) {
             $hf = CheckHF::where('流動NO', (int) $item->ppfno)->first();
-            $item->expct = $hf ? round($hf->合格数) : 0;
+            $item->expct = $hf ? round($hf->未仕上) : 0;
             return $item;
         });
         return $paginated;
@@ -66,12 +67,12 @@ class PPFConfirmRepository
             ->pluck('ppfno')
             ->map(fn($ppf) => (int) $ppf);
 
-        $checkHF = CheckHF::select('合格数','流動NO')->whereIn('流動NO', $ppfNos)
+        $checkHF = CheckHF::whereIn('流動NO', $ppfNos)
             ->get()
             ->keyBy('流動NO');
         $paginated->getCollection()->transform(function ($item) use ($checkHF) {
             $hf = $checkHF->get($item->ppfno);
-            $item->expct = $hf ? round($hf->合格数) : 0;
+            $item->expct = $hf ? round($hf->未仕上) : 0;
             return $item;
         });
         return $paginated;
