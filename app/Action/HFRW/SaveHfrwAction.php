@@ -25,7 +25,8 @@ class SaveHfrwAction
                     'ppfno' => $data['ppfno'],
                     'goodQty' => $form['GoodQty'] ?? 0,
                     'inspect_REC' => $form['inspect_REC'],
-                    'reworkNo' => $data['reworkNo']
+                    'reworkNo' => $data['reworkNo'],
+                    'totalNg' => $form['TotalNg']
                 ]);
                 $this->repo->saveDefects(
                     $hfId,

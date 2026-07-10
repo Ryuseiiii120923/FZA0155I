@@ -3,6 +3,7 @@
 namespace App\Services\Helper;
 
 use App\Repositories\SaveRepository;
+use App\Services\ProcessRecord\ProcessService\ProcessService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -29,6 +30,17 @@ class DashboardSaveService
                 otherDetails: $otherDetails,
                 inspection: $inspection,
             );
+            $data = [
+                'ppf' => $ppf,
+                'partNo' => $header['partno'],
+                'goodQty' => $goodNg['goodqty'],
+                'moldQty' => $header['totalInspected'],
+                'lotNo' => $header['lotno'],
+                'inspectionDate' => $otherDetails['hfDate'],
+                'encoder' => $otherDetails['encoder'],
+                'action' => $header['action']
+            ];
+            app(ProcessService::class)->process($data);
         });
     } catch (\Throwable $e) {
         Log::error('Error saving PPF draft', [

@@ -79,6 +79,7 @@ new class extends Component
             'expct'  => $this->expct,
             'totalInspected' => $this->totalInspected,
             'ppfno' => $this->ppf,
+            'action' => $this->action
         ]);
     }
 

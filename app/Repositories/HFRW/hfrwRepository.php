@@ -43,13 +43,14 @@ class hfrwRepository
                 'reworkNo' => $data['reworkNo'],
                 'process' => 'HFRW',
                 'operation' => 'HF',
+                'totalNg' => $data['totalNg']
             ];
 
 
             MasterRecordHFRW::upsert(
                 $forms,
                 ['inspect_REC', 'ppfno', 'reworkNo'],
-                ['goodQty', 'updated_by', 'total_inspect', 'hfid']
+                ['goodQty', 'updated_by', 'total_inspect', 'hfid', 'totalNg']
             );
         } catch (\Throwable $e) {
             
