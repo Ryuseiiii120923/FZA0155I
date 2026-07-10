@@ -95,8 +95,8 @@ class hfrwRepository
 
                 $inspectorRows[] = [
                     'ppfno' => $ppfno,
-                    'inspectorId' => $encoder,
-                    'inspName' => WorkerName::where('社員CD', $encoder)->value('名前'),
+                    'inspectorId' => $hfId,
+                    'inspName' => WorkerName::where('社員CD', $hfId)->value('名前'),
                     'defect' => $defect['type'],
                     'qty' => $defect['qty'],
                     'created_at' => now(),
