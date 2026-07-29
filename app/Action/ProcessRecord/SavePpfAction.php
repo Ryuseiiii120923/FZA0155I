@@ -94,6 +94,7 @@ class SavePpfAction
                     'totalNg' => $totalNg,
                     'totalRework' => $totalRework,
                     'totalGood' => $totalGood,
+                    'process' => 'HF',
                     'operation' => 'HF',
                     'updated_at' => now(),
                     'updated_by' => $encoder,

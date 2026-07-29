@@ -5,34 +5,17 @@ scanppf.addEventListener("click", function () {
     if (scanning == true) {
         return;
     }
+
     navigator.mediaDevices
-        .enumerateDevices()
-        .then((devices) => {
-            const videoInputDevices = devices.filter(
-                (device) => device.kind === "videoinput",
-            );
+        .getUserMedia({ video: { facingMode: { ideal: "environment" } } })
+        .then((stream) => {
+            stream.getTracks().forEach((track) => track.stop());
 
-            if (videoInputDevices.length === 0) {
-                alert("No Camera found.");
-                scanning = false;
-                return;
-            }
-            navigator.mediaDevices
-                .getUserMedia({ video: true })
-                .then(() => {
-                    return navigator.mediaDevices.enumerateDevices();
-                })
-                .then((devices) => {
-                    console.log(devices);
-                })
-                .catch((err) => {
-                    console.error("Permission or device error:", err);
-                });
-
-            const selectedDeviceId = videoInputDevices[0].deviceId;
             scanning = true;
-            codeReader.decodeFromVideoDevice(
-                selectedDeviceId,
+            codeReader.decodeFromConstraints(
+                {
+                    video: { facingMode: { ideal: "environment" } },
+                },
                 "video",
                 (result, err) => {
                     if (result) {
@@ -55,7 +38,8 @@ scanppf.addEventListener("click", function () {
             );
         })
         .catch((err) => {
-            console.error("error", err);
+            console.error("Camera error:", err);
+            alert("Camera permission denied or unavailable.");
             scanning = false;
         });
 });

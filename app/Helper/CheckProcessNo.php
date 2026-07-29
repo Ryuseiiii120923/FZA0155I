@@ -8,7 +8,7 @@ class CheckProcessNo
 {
     public function CheckNextProcess(string $partNo, string $moldDie)
     {
-        $processM = ProcessM::select(' 工程NO', '枝番')->where('品番', $partNo)->where('金型NO', $moldDie)
+        $processM = ProcessM::select('工程NO', '枝番')->where('品番', $partNo)->where('金型NO', $moldDie)
             ->orderBy('工程NO')->orderByDesc('枝番')->get();
 
         $strPCNo = '0';

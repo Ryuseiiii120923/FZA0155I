@@ -4,7 +4,7 @@
     'type' => 'text',
 ])
 
-<div class="flex-col w-11/12 sm:w-1/3 mx-5 sm:mx-2">
+<div class="flex-col w-full ">
     <label for="{{ $id }}" class="block text-sm font-medium text-black">
         {{ $label }}
     </label>

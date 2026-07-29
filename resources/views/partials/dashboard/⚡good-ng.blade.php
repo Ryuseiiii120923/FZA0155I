@@ -91,8 +91,8 @@ new class extends Component
 };
 ?>
 
-<div class="flex flex-col sm:flex-row  justify-center gap-4 mt-4 items-center @if($readonly) opacity-50 cursor-not-allowed @endif">
-    <div class="flex-col w-11/12 sm:w-1/3 mx-5 sm:mx-2 ">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 @if($readonly) opacity-50 cursor-not-allowed @endif">
+    <div class="flex flex-col w-full">
         <label for="excss" class="block text-sm font-medium text-gray-700">Excess Qty</label>
         <input type="number" id="excss" inputmode="numeric"
             autocomplete="off"
@@ -100,7 +100,8 @@ new class extends Component
             autocapitalize="off" class="mt-1 block w-full border border-black rounded-md px-2 py-1"
             placeholder=" " value="" readonly required wire:blur="GoodNg" disabled wire:model.lazy="excssqty">
     </div>
-    <div class="flex-col w-11/12 sm:w-1/3 mx-5 sm:mx-2 ">
+
+    <div class="flex flex-col w-full">
         <label for="lack" class="block text-sm font-medium text-gray-700">Lacking Qty</label>
         <input type="number" id="lack" inputmode="numeric"
             autocomplete="off"
@@ -109,8 +110,7 @@ new class extends Component
             placeholder=" " value="" readonly required wire:blur="GoodNg" wire:model.lazy="lackqty" disabled min="0">
     </div>
 
-
-    <div class="flex-col w-11/12 sm:w-1/3 mx-5 sm:mx-2 ">
+    <div class="flex flex-col w-full">
         <label for="rework" class="block text-sm font-medium text-gray-700">Rework Qty</label>
         <input type="number" id="rework" inputmode="numeric"
             autocomplete="off"
@@ -118,7 +118,8 @@ new class extends Component
             autocapitalize="off" class="mt-1 block w-full border border-black rounded-md px-2 py-1"
             placeholder=" " value="" required wire:blur="GoodNg" wire:model.lazy="reworkqty">
     </div>
-    <div class="flex-col w-11/12 sm:w-1/3 mx-5 sm:mx-2 ">
+
+    <div class="flex flex-col w-full">
         <label for="sample" class="block text-sm font-medium text-gray-700">Sample Qty</label>
         <input type="number" id="sample" inputmode="numeric"
             autocomplete="off"
@@ -126,15 +127,18 @@ new class extends Component
             autocapitalize="off" class="mt-1 block w-full border border-black rounded-md px-2 py-1"
             placeholder=" " value="" wire:blur="GoodNg" required wire:model.lazy="sampleqty">
     </div>
-    <div class="flex-col w-11/12 sm:w-1/3 mx-5 sm:mx-2 ">
+
+    <div class="flex flex-col w-full">
         <label for="good" class="block text-sm font-medium text-gray-700">Good Qty</label>
         <input type="number" id="good" class="mt-1 block w-full border border-black rounded-md px-2 py-1"
             placeholder=" " value="" required wire:model.live="goodqty" readonly>
     </div>
-    <div class="flex-col w-11/12 sm:w-1/3 mx-5 sm:mx-2 ">
+
+    <div class="flex flex-col w-full">
         <label for="ng" class="block text-sm font-medium text-gray-700">NG Ratio</label>
         <input type="number" id="ng" class="mt-1 block w-full border border-black rounded-md px-2 py-1"
             placeholder=" " value="" required wire:model.live="ngratioqty" readonly>
     </div>
+
     <button hidden wire:click="GoodNg" id="GoodNg"></button>
 </div>

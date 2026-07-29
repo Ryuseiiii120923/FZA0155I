@@ -48,12 +48,12 @@ new class extends Component
     <livewire:partials::dashboard.ppf-confirm />
     <livewire:partials::dashboard.total-inspection />
     <livewire:partials::dashboard.checkppf />
-    <div class="flex flex-col sm:flex-row gap-6 mt-4 items-start justify-center w-full">
-        <div class="w-11/12 sm:w-1/2 flex justify-center">
+    <div class="flex flex-col gap-6 mt-4 items-start justify-center w-full">
+        <div class="w-full flex justify-center">
 
             <livewire:partials::dashboard.defectsTable />
         </div>
-        <div class="w-11/12 sm:w-1/2 flex justify-center">
+        <div class="w-full flex justify-center">
 
             <livewire:partials::dashboard.rework-table />
         </div>

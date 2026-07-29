@@ -162,7 +162,7 @@
 
 
                 <h1 class="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-white text-center flex-1" id="title">
-                    {{ request()->input('process') === 'HF' ? 'HF Defect' : 'VI Defect' }}
+                   HF Defect
                 </h1>
 
                 <div class="flex-shrink-0">

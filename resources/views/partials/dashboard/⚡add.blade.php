@@ -14,6 +14,7 @@ new class extends Component
     use HasNotifications;
 
     public int $ppf = 0;
+    public string $deviceUuid = '';
     #[Locked]
     public string $action = 'add';
 
@@ -44,9 +45,17 @@ new class extends Component
                 }
             }
 
-            app(DashboardSaveService::class)->save($this->ppf, $draft);
-            app(DashboardDraftService::class)->clear($this->ppf);
-            $this->notifyReload('success', 'Inspection record saved.');
+            try {
+                app(DashboardSaveService::class)->save($this->ppf, $draft,$this->deviceUuid);
+                app(DashboardDraftService::class)->clear($this->ppf);
+                $this->notifyReload('success', 'Inspection record saved.');
+            } catch (\InvalidArgumentException $e) {
+                // Validation errors from the service itself (missing hfGroup/hfDate)
+                $this->notifyFail('Validation error', $e->getMessage());
+            } catch (\Throwable $e) {
+                // Unexpected errors (already logged inside DashboardSaveService)
+                $this->notifyFail('Save failed', 'Something went wrong while saving. Please try again.');
+            }
         }
     }
 
@@ -58,12 +67,12 @@ new class extends Component
 };
 ?>
 
-<div>
+<div x-data="{ init() { this.$wire.set('deviceUuid', localStorage.getItem('device_uuid')) } }" x-init="init()">
     @if($action !== '' && $action !== 'view')
     <div class="flex justify-center p-6">
         <button
             wire:click="submit"
-            @if($action == 'delete') @click.prevent="if (confirm('Are you sure you want to delete this ppf?')) $wire.submit()" @endif
+            @if($action=='delete' ) @click.prevent="if (confirm('Are you sure you want to delete this ppf?')) $wire.submit()" @endif
             @class([ 'px-12 py-2.5 rounded-lg text-white text-sm font-medium transition' , 'bg-blue-700 hover:bg-blue-800'=> $action === 'add',
             'bg-green-700 hover:bg-green-800' => $action === 'edit',
             'bg-red-700 hover:bg-red-800' => $action === 'delete',

@@ -1,5 +1,5 @@
         <div class="flex-shrink-0 mx-5 sm:mx-2"
-            x-data="{
+          x-data="{
     scanning: false,
     codeReader: null,
     stream: null,
@@ -24,21 +24,16 @@
     async startScan() {
         if (this.scanning) return;
         try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const videoInputDevices = devices.filter(d => d.kind === 'videoinput');
-
-            if (videoInputDevices.length === 0) {
-                alert('No Camera found.');
-                return;
-            }
-
-            this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // Get permission with rear camera preference, then release immediately
+            const tempStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: 'environment' } }
+            });
+            tempStream.getTracks().forEach(track => track.stop());
 
             this.scanning = true;
-            const selectedDeviceId = videoInputDevices[0].deviceId;
 
-            this.codeReader.decodeFromVideoDevice(
-                selectedDeviceId,
+            this.codeReader.decodeFromConstraints(
+                { video: { facingMode: { ideal: 'environment' } } },
                 'video',
                 (result, err) => {
                     if (result) {
@@ -54,6 +49,9 @@
                         this.stopScan();
                         $dispatch('close-scanner-modal');
                         return;
+                    }
+                    if (err && !(err instanceof ZXing.NotFoundException)) {
+                        console.error(err);
                     }
                 }
             );

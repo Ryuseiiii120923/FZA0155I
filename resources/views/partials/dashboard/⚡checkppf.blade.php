@@ -25,7 +25,7 @@ new class extends Component
     public bool $isShowAccept = true;
     public int $totalInspected = 0, $expected = 0;
     public bool $readonly = false;
-    public string $action = ""; 
+    public string $action = "";
     #[Locked]
     public string $currentPage = 'dashboard';
 
@@ -67,6 +67,7 @@ new class extends Component
         $this->dispatch('progress-accepted', excssqty: $excess, lackqty: $lack, ppf: $this->ppf);
     }
 
+    
     protected function syncDraft(): void
     {
         app(DashboardDraftService::class)->put($this->ppf, 'header', [
@@ -131,69 +132,71 @@ new class extends Component
 
     </div>
 
-    <div class="flex flex-col sm:flex-row justify-center gap-4 mt-4 items-center">
-        <x-ui.dashboard.input-field
-            id="PartNo"
-            label="Part No"
-            wire:model="partno"
-            readonly />
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+    <x-ui.dashboard.input-field
+        id="PartNo"
+        label="Part No"
+        wire:model="partno"
+        readonly />
 
-        <x-ui.dashboard.input-field
-            id="LotNo"
-            label="Lot No"
-            wire:model="lotno"
-            readonly />
+    <x-ui.dashboard.input-field
+        id="LotNo"
+        label="Lot No"
+        wire:model="lotno"
+        readonly />
 
+    <x-ui.dashboard.input-field
+        id="expct"
+        label="Expected Qty"
+        wire:model="expct"
+        readonly />
 
-        <x-ui.dashboard.input-field
-            id="MatNo"
-            label="Mat No"
-            wire:model="matno"
-            readonly />
+    <x-ui.dashboard.input-field
+        id="MatNo"
+        label="Mat No"
+        wire:model="matno"
+        readonly />
 
-        <x-ui.dashboard.input-field
-            id="MoldNo"
-            label="Mold No"
-            wire:model="moldno"
-            readonly />
+    <x-ui.dashboard.input-field
+        id="MoldNo"
+        label="Mold No"
+        wire:model="moldno"
+        readonly />
 
-        <x-ui.dashboard.input-field
-            id="shift"
-            label="Shift"
-            wire:model="shift"
-            readonly />
+    <x-ui.dashboard.input-field
+        id="shift"
+        label="Shift"
+        wire:model="shift"
+        readonly />
 
-        <x-ui.dashboard.input-field
-            id="opt"
-            label="Operator"
-            wire:model="opt"
-            readonly />
-
-        <x-ui.dashboard.input-field
-            id="expct"
-            label="Expected Qty"
-            wire:model="expct"
-            readonly />
-    </div>
-    <div class="flex flex-col mt-3 w-11/12 sm:w-1/3 mx-5 sm:mx-2" @if($currentPage==='defect' ) hidden @endif>
-        <!-- Label -->
-        <label for="ProgressInsp" class="block text-sm font-medium text-black">Inspection Progress</label>
-        <!-- Input + Button on same line -->
-        <div class="flex items-center gap-2 mt-1"> <input type="text"
-                id="ProgressInsp"
-                class="flex-1 border border-black rounded-md px-2 py-1 me-4"
-                placeholder=" "
-                required
-                wire:model="progressInsp"
-                readonly>
-            @unless($action != 'add')
-            <button type="button"
-                wire:click="acceptProgressQty" @if($isShowAccept) hidden @endif class="px-4 py-1 ms-3 bg-blue-600 text-white rounded-md
+    <x-ui.dashboard.input-field
+        id="opt"
+        label="Operator"
+        wire:model="opt"
+        readonly />
+</div>
+    <div class="w-full border rounded p-4 mt-4">
+        <div class="flex flex-col mt-3 w-11/12 sm:w-1/3" @if($currentPage==='defect' ) hidden @endif>
+            <!-- Label -->
+            <label for="ProgressInsp" class="block text-sm font-medium text-black">Inspection Progress</label>
+            <!-- Input + Button on same line -->
+            <div class="flex items-center gap-2 mt-1"> <input type="text"
+                    id="ProgressInsp"
+                    class="flex-1 border border-black rounded-md px-2 py-1 me-4"
+                    placeholder=" "
+                    required
+                    wire:model="progressInsp"
+                    readonly>
+                @unless($action != 'add')
+                <button type="button"
+                    wire:click="acceptProgressQty" @if($isShowAccept) hidden @endif class="px-4 py-1 ms-3 bg-blue-600 text-white rounded-md
                hover:bg-blue-700 hover:shadow-md transition duration-200"
-                wire:confirm="Are you sure you want to accept this?">
-                Accept
-            </button>
-            @endunless
+                    wire:confirm="Are you sure you want to accept this?">
+                    Accept
+                </button>
+                @endunless
+            </div>
         </div>
     </div>
+
 </div>

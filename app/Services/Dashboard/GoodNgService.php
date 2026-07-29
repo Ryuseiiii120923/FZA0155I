@@ -3,6 +3,7 @@
 namespace App\Services\Dashboard;
 
 use App\Repositories\Dashboard\GoodNgRepository;
+use App\Repositories\Dashboard\PPFRepository;
 
 class GoodNgService
 {
@@ -11,8 +12,10 @@ class GoodNgService
     public function getBaseQty(int $ppf): array
     {
         $result = $this->repo->getBaseQty($ppf);
+        $check = app(PPFRepository::class)->fetchHeadData($ppf);
 
         return [
+            'expct' => (int) $check->未仕上 ?? 0,
             'goodqty'   => (int) $result['goodQty'],
             'totalNG'   => (int) $result['totalNG'],
             'lackqty'   => (int) $result['lackQty'],
@@ -28,7 +31,8 @@ class GoodNgService
         int $reworkqty = 0,
         int $sampleqty = 0,
     ): array {
-        $goodqty = $base['goodqty']
+       
+        $goodqty = $base['expct']
             + $excssqty
             - $lackqty
             - $reworkqty
