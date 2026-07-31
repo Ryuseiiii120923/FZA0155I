@@ -5,8 +5,9 @@ namespace App\Services\ProcessRecord\ProcessService;
 use App\Helper\CheckProcessNo;
 use App\Models\mainDb\VICheck;
 
-class VICheckService{
-     public function handle(
+class VICheckService
+{
+    public function handle(
         string $action,
         int $ppfNo,
         string $partNo,
@@ -19,8 +20,8 @@ class VICheckService{
 
         $checkProcess = app(CheckProcessNo::class)->CheckNextProcess($partNo, $moldDie);
         $shouldInsert = $checkProcess['pc'] < $checkProcess['hf']
-    && $checkProcess['hf'] < $checkProcess['vi']
-    && $checkProcess['adm'] < $checkProcess['vi'];
+            && $checkProcess['hf'] < $checkProcess['vi']
+            && $checkProcess['adm'] < $checkProcess['vi'];
         if (! $shouldInsert) {
             return;
         }
@@ -28,7 +29,7 @@ class VICheckService{
         switch ($action) {
 
             case 'add':
-
+                VICheck::where('PPFNo', $ppfNo)->delete();
                 VICheck::create([
                     'PPFNo'     => $ppfNo,
                     'PartNo'    => $partNo,

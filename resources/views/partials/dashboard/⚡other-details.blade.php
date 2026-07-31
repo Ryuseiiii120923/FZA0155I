@@ -36,7 +36,7 @@ new class extends Component
         $this->syncDraft();
     }
 
-    protected function syncDraft(): void
+    public function syncDraft(): void
     {
         app(DashboardDraftService::class)->put($this->ppf, 'otherDetails', [
             'finishingMachine' => $this->autoMachines,
@@ -129,7 +129,7 @@ new class extends Component
         <div class="w-full">
             <label for="details" class="block text-sm font-medium text-gray-700">Details</label>
             <input type="text" id="details" class=" text-center mt-1 block w-full border border-black rounded-md px-2 py-1"
-                placeholder=" " value="" required wire:model.live="details">
+                placeholder=" " value="" required wire:model="details"  wire:blur="syncDraft">
         </div>
     </div>
 
@@ -137,7 +137,7 @@ new class extends Component
         <div class="w-full">
             <label for="inspection_group" class="block text-sm font-medium text-gray-700">HF Group</label>
             <input type="text" id="inspection_group" class=" text-center mt-1 block w-full border border-black rounded-md px-2 py-1"
-                placeholder=" " value="" required wire:model.live="hfGroup">
+                placeholder=" " value="" required wire:model="hfGroup"  wire:blur="syncDraft">
         </div>
     </div>
     <div class=" flex flex-row gap-4 mt-4 items-center mx-6 sm:mx-2">
