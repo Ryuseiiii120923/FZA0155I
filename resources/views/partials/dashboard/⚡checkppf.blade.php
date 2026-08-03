@@ -26,6 +26,7 @@ new class extends Component
     public int $totalInspected = 0, $expected = 0;
     public bool $readonly = false;
     public string $action = "";
+    public string $pressno = '';
     #[Locked]
     public string $currentPage = 'dashboard';
 
@@ -67,7 +68,7 @@ new class extends Component
         $this->dispatch('progress-accepted', excssqty: $excess, lackqty: $lack, ppf: $this->ppf);
     }
 
-    
+
     protected function syncDraft(): void
     {
         app(DashboardDraftService::class)->put($this->ppf, 'header', [
@@ -77,6 +78,7 @@ new class extends Component
             'moldno' => $this->moldno,
             'shift'  => $this->shift,
             'opt'    => $this->opt,
+            'pressno' => $this->pressno ?? '',
             'expct'  => $this->expct,
             'totalInspected' => $this->totalInspected,
             'ppfno' => $this->ppf,
@@ -133,48 +135,54 @@ new class extends Component
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-    <x-ui.dashboard.input-field
-        id="PartNo"
-        label="Part No"
-        wire:model="partno"
-        readonly />
+        <x-ui.dashboard.input-field
+            id="PartNo"
+            label="Part No"
+            wire:model="partno"
+            readonly />
 
-    <x-ui.dashboard.input-field
-        id="LotNo"
-        label="Lot No"
-        wire:model="lotno"
-        readonly />
+        <x-ui.dashboard.input-field
+            id="LotNo"
+            label="Lot No"
+            wire:model="lotno"
+            readonly />
 
-    <x-ui.dashboard.input-field
-        id="expct"
-        label="Expected Qty"
-        wire:model="expct"
-        readonly />
+        <x-ui.dashboard.input-field
+            id="expct"
+            label="Expected Qty"
+            wire:model="expct"
+            readonly />
 
-    <x-ui.dashboard.input-field
-        id="MatNo"
-        label="Mat No"
-        wire:model="matno"
-        readonly />
+        <x-ui.dashboard.input-field
+            id="MatNo"
+            label="Mat No"
+            wire:model="matno"
+            readonly />
 
-    <x-ui.dashboard.input-field
-        id="MoldNo"
-        label="Mold No"
-        wire:model="moldno"
-        readonly />
+        <x-ui.dashboard.input-field
+            id="MoldNo"
+            label="Mold No"
+            wire:model="moldno"
+            readonly />
+        <x-ui.dashboard.input-field
+            id="PressNo"
+            label="Press No"
+            wire:model="pressno"
+            readonly />
 
-    <x-ui.dashboard.input-field
-        id="shift"
-        label="Shift"
-        wire:model="shift"
-        readonly />
 
-    <x-ui.dashboard.input-field
-        id="opt"
-        label="Operator"
-        wire:model="opt"
-        readonly />
-</div>
+        <x-ui.dashboard.input-field
+            id="shift"
+            label="Shift"
+            wire:model="shift"
+            readonly />
+
+        <x-ui.dashboard.input-field
+            id="opt"
+            label="Operator"
+            wire:model="opt"
+            readonly />
+    </div>
     <div class="w-full border rounded p-4 mt-4">
         <div class="flex flex-col mt-3 w-11/12 sm:w-1/3" @if($currentPage==='defect' ) hidden @endif>
             <!-- Label -->

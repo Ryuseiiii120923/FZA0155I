@@ -62,6 +62,7 @@ class PPFService
             'shift'  => $check->班 ?? '',
             'opt'    => $check->作業員CD ?? '',
             'expct'  => $check->未仕上 ?? 0,
+            'pressno' => $check->PRESSNO ?? '',
             'progressInsp' => $total_inspected
         ];
     }

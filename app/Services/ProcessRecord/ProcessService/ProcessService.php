@@ -35,7 +35,7 @@ class ProcessService
 
         $this->inventoryService->update($partNo, $ppf, $action, $goodQty, $moldQty,$internalPartNo,$prototypeFlag,$group);
 
-        $this->moldingResultService->update( $ppf, $action, $goodQty, $moldQty);
+        $this->moldingResultService->update( $ppf, $action, $moldQty, $goodQty);
 
         $this->inspectionSlipService->handle($ppf,$partNo,$internalPartNo,$inspectionType,$lotNo,$goodQty,$action);
 

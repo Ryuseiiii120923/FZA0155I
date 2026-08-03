@@ -45,6 +45,7 @@ class SaveRepository
                     'LotNo'      => $header['lotno'],
                     'MatNo'      => $header['matno'],
                     'MDNo'       => $header['moldno'],
+                    'PressNo'    => $header['pressno'],
                     'Shift'      => $header['shift'],
                     'Operator'   => substr(trim($header['opt']), 0, 2),
                     'Total'      => $header['totalInspected'],
@@ -54,6 +55,11 @@ class SaveRepository
                     'Details'    => $otherDetails['details'] ?? '',
                     'HFDate'     => $otherDetails['hfDate'] ?? null,
                     'Encoder'    => (int) ($otherDetails['encoder'] ?? 0),
+                    'InspNo1' => '',
+                    'InspNo2' => '',
+                    'InspNo3' => '',
+                    'InspNo4' => '',
+                    'InspNo5' => '',
                     'DateEncode' => Carbon::now()->format('Y-m-d h:i:s'),
                     'ExcessQty'  => $goodNg['excssqty'],
                     'LackingQty' => $goodNg['lackqty'],
@@ -64,6 +70,7 @@ class SaveRepository
                         : '',
                 ]);
             } else {
+                $isFirstRow = true;
                 foreach ($defects as $defect) {
                     $type = $defect['type'] ?? $defect['newDefect'] ?? null;
                     $qty  = isset($defect['qty']) ? (float) $defect['qty'] : (float) ($defect['newQuan'] ?? 0);
@@ -82,24 +89,32 @@ class SaveRepository
                         'LotNo'      => $header['lotno'],
                         'MatNo'      => $header['matno'],
                         'MDNo'       => $header['moldno'],
+                        'PressNo'    => $header['pressno'],
                         'Shift'      => $header['shift'],
                         'Operator'   => substr(trim($header['opt']), 0, 2),
-                        'Total'      => $header['totalInspected'],
-                        'Good'       => $goodNg['goodqty'],
+                        'Total'      => $isFirstRow ? $header['totalInspected'] : null,
+                        'Good'       => $isFirstRow ? $goodNg['goodqty'] : null,
                         'Defect'     => $type ?? "",
                         'Quantity'   => $qty ?? 0,
                         'Details'    => $otherDetails['details'] ?? '',
                         'HFDate'     => $otherDetails['hfDate'] ?? null,
                         'Encoder'    => (int) ($otherDetails['encoder'] ?? 0),
+                        'InspNo1' => '',
+                        'InspNo2' => '',
+                        'InspNo3' => '',
+                        'InspNo4' => '',
+                        'InspNo5' => '',
                         'DateEncode' => Carbon::now()->format('Y-m-d h:i:s'),
-                        'ExcessQty'  => $goodNg['excssqty'],
-                        'LackingQty' => $goodNg['lackqty'],
-                        'ReworkQty'  => $goodNg['reworkqty'],
-                        'SampleQty'  => $goodNg['sampleqty'],
+                        'ExcessQty'  => $isFirstRow ? $goodNg['excssqty'] : 0,
+                        'LackingQty' => $isFirstRow ? $goodNg['lackqty'] : 0,
+                        'ReworkQty'  => $isFirstRow ? $goodNg['reworkqty'] : 0,
+                        'SampleQty'  => $isFirstRow ? $goodNg['sampleqty'] : 0,
                         'FinMachine' => isset($otherDetails['finishingMachine'])
                             ? substr(implode(',', (array) $otherDetails['finishingMachine']), 0, 50)
                             : '',
                     ]);
+
+                    $isFirstRow = false;
                 }
             }
 
