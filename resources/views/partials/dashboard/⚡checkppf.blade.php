@@ -37,7 +37,7 @@ new class extends Component
             if ($action != '') {
                 $this->action = $action;
             }
-            if ($this->action === '') {
+            if ($this->action === '' && $this->currentPage != 'defect' ) {
                 $this->notifyFail('Error', 'Please select action first.');
                 return;
             }
