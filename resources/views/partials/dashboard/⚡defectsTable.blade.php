@@ -35,12 +35,12 @@ new class extends Component
     }
 
     #[On('reset-form')]
-public function resetForm(): void
-{
-    $this->defects = [];
-    $this->smallDefects = [];
-    $this->totalNG = 0;
-}
+    public function resetForm(): void
+    {
+        $this->defects = [];
+        $this->smallDefects = [];
+        $this->totalNG = 0;
+    }
 
     protected function syncDraft(): void
     {
@@ -58,7 +58,7 @@ public function resetForm(): void
         <p class="text-4xl font-extrabold  text-center text-white p-4 ">Defect</p>
     </div>
 
-    <!-- TABLE -->  
+    <!-- TABLE -->
     <div class="overflow-x-auto mt-3">
         <table class="table-auto w-full text-sm text-white bg-gray-800 rounded-lg overflow-hidden">
             <thead class="bg-gray-900 text-white text-left">
@@ -73,13 +73,24 @@ public function resetForm(): void
             </thead>
             <tbody class="bg-gray-700">
                 @forelse($defects as $defect)
-                <tr wire:key="defect-{{ $defect['type'] }}">
-                    <td class="px-4 py-2">{{ $defect['operatorid'] }}</td>
+                @php $isSub = ! empty($defect['isSub']); @endphp
+                <tr wire:key="defect-{{ $defect['operatorid'] }}-{{ $defect['process'] }}-{{ $defect['type'] }}"
+                    @class(['bg-gray-600'=> $isSub])>
+                    <td class="px-4 py-2 {{ $isSub ? 'pl-10 border-l-4 border-blue-300' : '' }}">
+                        @if($isSub)↳ @endif{{ $defect['operatorid'] }}
+                    </td>
                     <td class="px-4 py-2">{{ $defect['operatorname'] }}</td>
                     <td class="px-4 py-2">{{ $defect['type'] }}</td>
                     <td class="px-4 py-2">{{ $defect['qty'] > 0 ? $defect['qty'] : '' }}</td>
                     <td class="px-4 py-2">{{ $defect['dateEncode'] }}</td>
-                    <td class="px-4 py-2">{{ $defect['process'] }}</td>
+                    <td class="px-4 py-2">
+                        {{ $defect['process'] }}
+                        @if($isSub)
+                        <span class="ml-2 text-xs bg-blue-200 text-blue-900 px-2 py-0.5 rounded">
+                            Sub of {{ $defect['parentHfid'] ?? '-' }}
+                        </span>
+                        @endif
+                    </td>
                 </tr>
 
 
@@ -88,7 +99,7 @@ public function resetForm(): void
 
                 @if(isset($smallDefects[$defect['type']][$defect['process']]))
                 @foreach($smallDefects[$defect['type']][$defect['process']][$defect['operatorid']] ?? [] as $sDefect)
-                <tr class="bg-gray-500" wire:key="smalldefect-{{ $sDefect['type']}}">
+                <tr class="bg-gray-500" wire:key="smalldefect-{{ $defect['operatorid'] }}-{{ $defect['process'] }}-{{ $defect['type'] }}-{{ $sDefect['type'] }}">
                     <td class="px-8 py-1"></td>
                     <td class="px-8 py-1"></td>
                     <td class="px-6 py-1">↳ {{ $sDefect['type'] }}</td>

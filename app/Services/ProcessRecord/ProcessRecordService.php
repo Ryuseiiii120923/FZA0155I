@@ -29,56 +29,74 @@ class ProcessRecordService
             return ['error' => 'The forms for' . $ppf . 'is empty'];
         }
 
-        foreach ($hfRecords as $record) {
-            $defectRaw = $this->repo->getGroupedDefects($ppf, $encoder, $record->formId);
+        $subRecords = $this->repo->getSubForms($ppf, $encoder);
 
-            $operatorDefect = $defectRaw
-                ->groupBy(fn($d) => strtolower(trim($d->defect)))
-                ->map(function ($group) {
-                    $first = $group->first();
+        foreach ($hfRecords->concat($subRecords) as $record) {
+            $built = $this->buildForm($record, $ppf, $encoder);
 
-                    return [
-                        'id' => $first->id,
-                        'type' => $first->defect,
-                        'qty' => $group->sum(fn($d) => $d->qty ?? 1)
-                    ];
-                })
-                ->values()
-                ->toArray();
+            $forms[$record->formId]    = $built['form'];
+            $defectNg[$record->formId] = $built['defectNg'];
+            $reworkNg[$record->formId] = $built['reworkNg'];
+        }
 
-            $defectNg[$record->hfid] = collect($operatorDefect)->sum('qty');
+        return compact('forms', 'defectNg', 'reworkNg');
+    }
 
-            $smDefectRaw = $this->repo->getGroupedSmall($ppf, $encoder, $record->formId);
+    private function buildForm($record, int $ppf, int $encoder): array
+    {
+        $defectRaw = $this->repo->getGroupedDefects($ppf, $encoder, $record->formId);
 
-            $operatorSmDefect = $smDefectRaw
-                ->groupBy('largeDefect')
-                ->mapWithKeys(function ($group, $largeDefect) {
-                    return [
-                        $largeDefect => collect($group)->map(fn($s) => [
-                            'id' => $s->id,
-                            'type' => $s->smallDefect,
-                            'qty' => $s->qty ?? 0
-                        ])
-                    ];
-                })
-                ->toArray();
+        $operatorDefect = $defectRaw
+            ->groupBy(fn($d) => strtolower(trim($d->defect)))
+            ->map(function ($group) {
+                $first = $group->first();
 
-            $selectedLarge = array_key_first($operatorSmDefect);
-
-            $reworkRaw  = $this->repo->getGroupedReworks($ppf, $encoder, $record->formId);
-
-            $operatorRework = $reworkRaw->map(fn($r) => [
-                'id' => $r->id,
-                'hfno' => $r-> hfid,
-                'totalinsp' => $r->total_inspect,
-                'type' => $r->rework_type,
-                'qty' => $r->qty ?? 0
-            ])
+                return [
+                    'id' => $first->id,
+                    'type' => $first->defect,
+                    'qty' => $group->sum(fn($d) => $d->qty ?? 1)
+                ];
+            })
+            ->values()
             ->toArray();
-            $reworkNg[$record->hfid] = collect($operatorRework)->sum('qty');
-            $forms[$record->formId] = [
+
+        $smDefectRaw = $this->repo->getGroupedSmall($ppf, $encoder, $record->formId);
+
+        $operatorSmDefect = $smDefectRaw
+            ->groupBy('largeDefect')
+            ->mapWithKeys(function ($group, $largeDefect) {
+                return [
+                    $largeDefect => collect($group)->map(fn($s) => [
+                        'id' => $s->id,
+                        'type' => $s->smallDefect,
+                        'qty' => $s->qty ?? 0
+                    ])
+                ];
+            })
+            ->toArray();
+
+        $selectedLarge = array_key_first($operatorSmDefect);
+
+        $reworkRaw = $this->repo->getGroupedReworks($ppf, $encoder, $record->formId);
+
+        $operatorRework = $reworkRaw->map(fn($r) => [
+            'id' => $r->id,
+            'hfno' => $r->hfid,
+            'totalinsp' => $r->total_inspect,
+            'type' => $r->rework_type,
+            'qty' => $r->qty ?? 0
+        ])
+            ->toArray();
+
+        $parentFormId = $record->parentFormId ?? null;
+
+        return [
+            'defectNg' => collect($operatorDefect)->sum('qty'),
+            'reworkNg' => collect($operatorRework)->sum('qty'),
+            'form' => [
                 'id' => $record->id,
                 'formId' => $record->formId,
+                'parent_form_id' => $parentFormId,
                 'hf_id' => $record->hfid,
                 'ppfno' => $record->ppfno,
                 'total_inspect' => $record->total_inspect,
@@ -91,9 +109,9 @@ class ProcessRecordService
                 'updated_at' => $record->updated_at ?? null,
                 'selectedLargeDefect' => $selectedLarge,
                 'ForRework' => (bool) $record->forRework,
-                'Remarks' => $record->remarks
-            ];
-        }
-        return compact('forms', 'defectNg', 'reworkNg');
+                'Remarks' => $record->remarks,
+                'Process' => $parentFormId ? 'Sub Process' : '100% VI',
+            ],
+        ];
     }
 }

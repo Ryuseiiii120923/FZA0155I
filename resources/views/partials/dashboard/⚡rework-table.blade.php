@@ -23,7 +23,7 @@ new class extends Component
         $this->totalNgRework = $data['total'];
         $this->syncDraft();
     }
-      #[On('read-only')]
+    #[On('read-only')]
     public function readOnly(bool $readonly = false)
     {
         $this->readonly = $readonly;
@@ -38,11 +38,11 @@ new class extends Component
     }
 
     #[On('reset-form')]
-public function resetForm(): void
-{
-    $this->rework = [];
-    $this->totalNgRework = 0;
-}
+    public function resetForm(): void
+    {
+        $this->rework = [];
+        $this->totalNgRework = 0;
+    }
 };
 ?>
 
@@ -63,10 +63,20 @@ public function resetForm(): void
                 </tr>
             </thead>
             <tbody class="bg-gray-700">
-                @forelse ( $rework as $reworks )
-                <tr wire:key="rework-{{ $reworks['type'] }}">
-                    <td class="px-4 py-2">{{ $reworks['operatorid'] }}</td>
-                    <td class="px-4 py-2">{{ $reworks['operatorname'] }}</td>
+                @forelse ($rework as $reworks)
+                @php $isSub = ! empty($reworks['isSub']); @endphp
+                <tr wire:key="rework-{{ $reworks['operatorid'] }}-{{ $reworks['type'] }}" @class(['bg-gray-600'=> $isSub])>
+                    <td class="px-4 py-2 {{ $isSub ? 'pl-10 border-l-4 border-blue-300' : '' }}">
+                        @if($isSub)↳ @endif{{ $reworks['operatorid'] }}
+                    </td>
+                    <td class="px-4 py-2">
+                        {{ $defect['process'] }}
+                        @if($isSub)
+                        <span class="ml-2 text-xs bg-blue-200 text-blue-900 px-2 py-0.5 rounded">
+                            Sub of {{ $defect['parentHfid'] ?? '-' }}
+                        </span>
+                        @endif
+                    </td>
                     <td class="px-4 py-2">{{ $reworks['type'] }}</td>
                     <td class="px-4 py-2">{{ $reworks['qty'] }}</td>
                     <td class="px-4 py-2">{{ $reworks['totalinsp'] }}</td>

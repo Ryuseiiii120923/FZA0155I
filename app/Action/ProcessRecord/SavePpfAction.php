@@ -7,6 +7,7 @@ use App\Models\Auth\WorkerName;
 use App\Repositories\Defect\DefectRepository;
 use App\Repositories\ProcessRecord\MasterDataPRRepository;
 use App\Repositories\Rework\ReworkRepository;
+use App\Support\ProcessType;
 use Illuminate\Support\Facades\DB;
 
 // app/Actions/Ppf/SavePpfAction.php
@@ -21,8 +22,9 @@ class SavePpfAction
 
     public function execute(array $forms, mixed $ppf, int $encoder, array $pendingDeletes): void
     {
+        $this->assertValidHierarchy($forms, $pendingDeletes);
+
         DB::transaction(function () use ($encoder, $forms, $ppf, $pendingDeletes) {
-            // dd($forms);
             foreach ($pendingDeletes['forms'] as $form) {
                 $this->masterRepo->deleteFormCascade($form['formId']);
             }
@@ -39,6 +41,37 @@ class SavePpfAction
             $this->saveSubData($forms, $ppf, $encoder);
             $this->saveGeneralData($forms, $ppf, $encoder);
         });
+    }
+
+    private function assertValidHierarchy(array $forms, array $pendingDeletes): void
+    {
+        $deletedIds = array_column($pendingDeletes['forms'] ?? [], 'formId');
+
+        foreach ($forms as $form) {
+            $parentId = $form['parent_form_id'] ?? null;
+
+            if (! $parentId) {
+                continue;
+            }
+
+            if ($parentId === ($form['formId'] ?? null)) {
+                throw new \DomainException('A process cannot be its own parent.');
+            }
+
+            $parent = $forms[$parentId] ?? null;
+
+            if (! $parent) {
+                throw new \DomainException('Sub process has no parent process.');
+            }
+
+            if (! empty($parent['parent_form_id'])) {
+                throw new \DomainException('Sub processes can only be one level deep.');
+            }
+
+            if (in_array($parentId, $deletedIds, true)) {
+                throw new \DomainException('Cannot keep a sub process under a deleted process.');
+            }
+        }
     }
 
     public function saveSubData(array $forms, mixed $ppf, int $encoder)
@@ -58,108 +91,103 @@ class SavePpfAction
 
     public function saveGeneralData(array $forms, mixed $ppf, int $encoder)
     {
-        try {
-            $totalInspect = 0;
-            $totalNg = 0;
-            $totalRework = 0;
-            $totalGood = 0;
-            foreach ($forms as $form) {
-                $totalInspect += (int)$form['total_inspect'];
-                $totalNg += (int)$form['TotalNg'];
-                $totalRework += (int)$form['TotalRework'];
-                $totalGood += (int)$form['GoodQty'];
+        // Quantity belongs to the main processes; NG and rework come from every form
+        $totalInspect = 0;
+        $totalNg      = 0;
+        $totalRework  = 0;
+        $mainForms    = [];
+
+        foreach ($forms as $form) {
+            if (empty($form['parent_form_id'] ?? null)) {
+                $mainForms[]   = $form;
+                $totalInspect += (int) $form['total_inspect'];
             }
-            $mergeDefect = [];
-            $mergeSmallDefect = [];
-            $mergeRework = [];
-            $isExisting = !empty($forms['id'] ?? null);
-            //fetch the mergeDefects
-            $prepareForm = $this->prepareDataForSubmission($forms, $ppf, $encoder);
-            $mergeDefect[] = $prepareForm['mergeDefect'];
-            $mergeSmallDefect[] = $prepareForm['mergeSmallDefect'];
-            $mergeRework[] = $prepareForm['mergeRework'];
-
-            $defectInsp = [];
-            $smallDefectInsp = [];
-            $reworkInsp = [];
-
-            foreach ($forms as $form) {
-                $inspName = $inspName = Worker::with('employeeName')
-                    ->where('作業員CD', $form['hf_id'])
-                    ->first()?->employeeName?->名前;
-                $generalData = [
-                    'ppfno' => $ppf,
-                    'inspectorId' => $form['hf_id'],
-                    'total_inspect' => $totalInspect,
-                    'totalNg' => $totalNg,
-                    'totalRework' => $totalRework,
-                    'totalGood' => $totalGood,
-                    'process' => 'HF',
-                    'operation' => 'HF',
-                    'updated_at' => now(),
-                    'updated_by' => $encoder,
-                    ...(!$isExisting ? ['created_at' => now()] : []),
-                ];
-
-
-                foreach ($mergeDefect as $index) {
-                    foreach ($index as $def) {
-                        $defectInsp[] = [
-                            'ppfno' => $ppf,
-                            'inspectorId' => $form['hf_id'],
-                            'inspName' => $inspName,
-                            'defect' => $def['type'],
-                            'qty' => $def['qty'],
-                            'process' => 'HF',
-                            'operation' => 'HF',
-                            'updated_by' => $encoder,
-                            'updated_at' => now(),
-                            ...(!$isExisting ? ['created_at' => now()] : []),
-                        ];
-                    }
-                }
-                foreach ($mergeSmallDefect as $indexLarge) {
-                    foreach ($indexLarge as $small) {
-                        $smallDefectInsp[] = [
-                            'ppfno' => $ppf,
-                            'inspectorId' => $form['hf_id'],
-                            'small_defect' => $small['type'],
-                            'large_defect' => $small['large'],
-                            'qty' => $small['qty'],
-                            'process' => 'HF',
-                            'operation' => 'HF',
-                            'updated_by' => $encoder,
-                            'updated_at' => now(),
-                            ...(!$isExisting ? ['created_at' => now()] : []),
-                        ];
-                    }
-                }
-                foreach ($mergeRework as $index) {
-                    foreach ($index as $rework) {
-                        $reworkInsp[] = [
-                            'ppfno' => $ppf,
-                            'inspectorId' => $form['hf_id'],
-                            'inspName' => $inspName,
-                            'rework' => $rework['type'],
-                            'qty' => $rework['qty'],
-                            'total_inspect' => $rework['total_inspect'],
-                            'process' => 'HF',
-                            'operation' => 'HF',
-                            'updated_by' => $encoder,
-                            'updated_at' => now(),
-                            ...(!$isExisting ? ['created_at' => now()] : []),
-                        ];
-                    }
-                }
-            }
-
-            $this->masterRepo->upsertGeneralForm($generalData);
-            $this->defectRepo->saveGeneralDefect($defectInsp);
-            $this->defectRepo->saveGeneralSmall($smallDefectInsp);
-            $this->reworkRepo->saveGeneralRework($reworkInsp);
-        } catch (\Exception $e) {
-            dd($e->getMessage());
+            $totalNg     += (int) $form['TotalNg'];
+            $totalRework += (int) $form['TotalRework'];
         }
+
+        if (empty($mainForms)) {
+            return;
+        }
+
+        $totalGood = $totalInspect - $totalNg;
+        $leadForm  = end($mainForms);
+
+        $defectInsp      = [];
+        $smallDefectInsp = [];
+        $reworkInsp      = [];
+
+        foreach ($forms as $form) {
+            $process  = empty($form['parent_form_id'] ?? null) ? ProcessType::HF : ProcessType::HF_SUB;
+            $hfId     = $form['hf_id'];
+            $inspName = Worker::with('employeeName')
+                ->where('作業員CD', $hfId)
+                ->first()?->employeeName?->名前;
+
+            $base = [
+                'ppfno'       => $ppf,
+                'inspectorId' => $hfId,
+                'process'     => $process,
+                'operation'   => 'HF',
+                'updated_by'  => $encoder,
+                'updated_at'  => now(),
+                'created_at'  => now(),
+            ];
+
+            foreach ($form['defects'] ?? [] as $defect) {
+                $key = "{$hfId}|{$process}|{$defect['type']}";
+
+                $defectInsp[$key] ??= $base + [
+                    'inspName' => $inspName,
+                    'defect'   => $defect['type'],
+                    'qty'      => 0,
+                ];
+                $defectInsp[$key]['qty'] += (int) $defect['qty'];
+            }
+
+            foreach ($form['smallDefects'] ?? [] as $largeDefect => $smalls) {
+                foreach ($smalls as $small) {
+                    $key = "{$hfId}|{$process}|{$largeDefect}|{$small['type']}";
+
+                    $smallDefectInsp[$key] ??= $base + [
+                        'small_defect' => $small['type'],
+                        'large_defect' => $largeDefect,
+                        'qty'          => 0,
+                    ];
+                    $smallDefectInsp[$key]['qty'] += (int) $small['qty'];
+                }
+            }
+
+            foreach ($form['rework'] ?? [] as $rework) {
+                $key = "{$hfId}|{$process}|{$rework['type']}";
+
+                $reworkInsp[$key] ??= $base + [
+                    'inspName'      => $inspName,
+                    'rework'        => $rework['type'],
+                    'qty'           => 0,
+                    'total_inspect' => $rework['totalinsp'],
+                ];
+                $reworkInsp[$key]['qty'] += (int) $rework['qty'];
+            }
+        }
+
+        $this->masterRepo->upsertGeneralForm([
+            'ppfno'         => $ppf,
+            'inspectorId'   => $leadForm['hf_id'],
+            'total_inspect' => $totalInspect,
+            'totalNg'       => $totalNg,
+            'totalRework'   => $totalRework,
+            'totalGood'     => $totalGood,
+            'process'       => ProcessType::HF,
+            'operation'     => 'HF',
+            'updated_at'    => now(),
+            'updated_by'    => $encoder,
+            'created_at'    => now(),
+        ]);
+
+        $this->defectRepo->saveGeneralDefect(array_values($defectInsp));
+        $this->defectRepo->saveGeneralSmall(array_values($smallDefectInsp));
+        $this->reworkRepo->saveGeneralRework(array_values($reworkInsp));
     }
 
     //setting the saving of rework
@@ -184,6 +212,7 @@ class SavePpfAction
                 'updated_by'         => $encoder,
                 'updated_at'         => now(),
                 'formId'             => $form['formId'],
+                'parentFormId'       => $form['parent_form_id'] ?? null,
                 'goodQty'            => $form['GoodQty'],
                 'totalNg'            => $form['TotalNg'],
                 'totalRework'        => $form['TotalRework'],
@@ -266,7 +295,5 @@ class SavePpfAction
         ];
     }
 
-    public function update2(){
-        
-    }
+    public function update2() {}
 }

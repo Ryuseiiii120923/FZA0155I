@@ -1,9 +1,8 @@
 <nav class="flex-1 py-4 space-y-1 px-2 overflow-y-auto overflow-x-hidden">
 
     <x-ui.sidebar-button
-        page="dashboard"
-        title="Hand Finishing Dashboard"
-        @click.stop="desktopExpanded = false; mobileOpen = false">
+        route="landing-page"
+        title="Hand Finishing Dashboard">
         <x-slot:icon>
             <svg xmlns="http://www.w3.org/2000/svg"
                 class="w-5 h-5"
@@ -20,9 +19,8 @@
     </x-ui.sidebar-button>
 
     <x-ui.sidebar-button
-        page="defect"
-        title="Hand Finishing Defect Encoding"
-        @click.stop="desktopExpanded = false; mobileOpen = false">
+        route="defect"
+        title="Hand Finishing Defect Encoding">
         <x-slot:icon>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -44,9 +42,8 @@
     </x-ui.sidebar-button>
 
     <x-ui.sidebar-button
-        page="rework"
-        title="Hand Finishing Rework Encoding"
-        @click.stop="desktopExpanded = false; mobileOpen = false">
+        route="rework"
+        title="Hand Finishing Rework Encoding">
         <x-slot:icon>
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

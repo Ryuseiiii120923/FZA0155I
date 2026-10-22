@@ -23,6 +23,7 @@ new class extends Component
     protected function syncDraft(): void
     {
         $insps = collect($this->inspections)
+            ->sortBy(fn($i) => ! empty($i['isSub']) ? 1 : 0)
             ->pluck('hfid')
             ->filter()
             ->unique()
@@ -41,17 +42,17 @@ new class extends Component
         ]);
     }
 
-        #[On('read-only')]
+    #[On('read-only')]
     public function readOnly(bool $readonly = false)
     {
         $this->readonly = $readonly;
     }
 
     #[On('reset-form')]
-public function resetForm(): void
-{
-    $this->inspections = [];
-}
+    public function resetForm(): void
+    {
+        $this->inspections = [];
+    }
 };
 ?>
 
@@ -70,18 +71,27 @@ public function resetForm(): void
                 </tr>
             </thead>
             <tbody class="bg-gray-700">
-                @forelse ( $inspections ?? [] as $inspection )
-                <tr>
-                    <td class="px-4 py-2">{{ $inspection['hfid'] ?? '-' }}</td>
-                    <td class="px-4 py-2">{{ $inspection['hfname'] ?? '-' }}</td>
+                @forelse ($inspections ?? [] as $inspection)
+                @php $isSub = ! empty($inspection['isSub']); @endphp
+                <tr wire:key="insp-{{ $inspection['formId'] ?? $loop->index }}"
+                    @class(['bg-gray-600'=> $isSub])>
+                    <td class="px-4 py-2 {{ $isSub ? 'pl-10 border-l-4 border-blue-300' : '' }}">
+                        @if($isSub)↳ @endif{{ $inspection['hfid'] ?? '-' }}
+                    </td>
+                    <td class="px-4 py-2">
+                        {{ $inspection['hfname'] ?? '-' }}
+                        @if($isSub)
+                        <span class="ml-2 text-xs bg-blue-200 text-blue-900 px-2 py-0.5 rounded">
+                            Sub of {{ $inspection['parentHfid'] ?? '-' }}
+                        </span>
+                        @endif
+                    </td>
                     <td class="px-4 py-2">{{ $inspection['totalInspect'] ?? '-' }}</td>
                     <td class="px-4 py-2">{{ $inspection['dateEncode'] ?? '-' }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" class="px-6 py-4 text-center">
-                        No data added.
-                    </td>
+                    <td colspan="4" class="px-6 py-4 text-center">No data added.</td>
                 </tr>
                 @endforelse
             </tbody>

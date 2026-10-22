@@ -150,27 +150,43 @@ class DropDownService
         }
         $form = $forms[$formId];
 
-        $defectQty = isset($defectNg[$formId])
-            ? $defectNg[$formId]
-            : collect($form['defects'] ?? [])->sum('qty');
+        [$defectQty, $reworkQty] = $this->formNg($formId, $forms, $defectNg, $reworkNg);
+        $totalNg = $defectQty + $reworkQty;
 
-        $reworkQty = isset($reworkNg[$formId])
-            ? $reworkNg[$formId]
-            : collect($form['rework'] ?? [])->sum('qty');
-
-        $totalNg = ($defectQty ?? 0) + ($reworkQty ?? 0);
-
-        $forms[$formId]['GoodQty'] =
-            ($form['total_inspect'] ?? 0) - $totalNg;
-
-        $forms[$formId]['TotalNg'] = $totalNg;
-        $forms[$formId]['TotalRework'] = $reworkQty;
         return [
-            'GoodQty' => $forms[$formId]['GoodQty'],
-            'TotalNg' => $forms[$formId]['TotalNg'],
-            'TotalRework' => $forms[$formId]['TotalRework']
+            'GoodQty'     => (int) ($form['total_inspect'] ?? 0) - $totalNg,
+            'TotalNg'     => $totalNg,
+            'TotalRework' => $reworkQty,
         ];
     }
 
+    private function formNg(string $formId, array $forms, array $defectNg, array $reworkNg): array
+    {
+        $form = $forms[$formId] ?? [];
 
+        $defectQty = $defectNg[$formId] ?? collect($form['defects'] ?? [])->sum('qty');
+        $reworkQty = $reworkNg[$formId] ?? collect($form['rework'] ?? [])->sum('qty');
+
+        return [(int) $defectQty, (int) $reworkQty];
+    }
+
+    public function childrenOf(string $parentId, array $forms): array
+    {
+        return array_filter(
+            $forms,
+            fn($f) => ($f['parent_form_id'] ?? null) === $parentId
+        );
+    }
+
+    /** Push the parent's total_inspect down to all of its sub processes. */
+    public function syncSubTotals(array $forms, string $parentId): array
+    {
+        $good = max(0, (int) ($forms[$parentId]['GoodQty'] ?? 0));
+
+        foreach (array_keys($this->childrenOf($parentId, $forms)) as $childId) {
+            $forms[$childId]['total_inspect'] = $good;
+        }
+
+        return $forms;
+    }
 }

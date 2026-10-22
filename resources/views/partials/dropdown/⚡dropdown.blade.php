@@ -57,9 +57,81 @@ new class extends Component
         $this->hasAnyForm = true;
         $formId = (string) Str::uuid();
 
-        $this->forms[$formId] = [
+        $this->forms[$formId] = $this->blankForm($formId, null);
+
+        $this->modalOpen[$formId] = true;
+        $this->modalMode[$formId] = 'add';
+        $this->resetModalFields();
+
+        $this->dispatch('scroll-to-form', formId: $formId);
+    }
+    public function addSubProcess(string $parentId): void
+    {
+        if (! isset($this->forms[$parentId]) || ! empty($this->forms[$parentId]['parent_form_id'])) {
+            $this->notifyFail('Sub Process', 'Invalid parent process.');
+            return;
+        }
+
+        if (empty($this->forms[$parentId]['hf_id'] ?? '') || empty($this->forms[$parentId]['total_inspect'] ?? '')) {
+            $this->notifyFail('Sub Process', 'Please save the main process (HF ID and Total Inspect) first.');
+            return;
+        }
+
+        $parentGood = (int) ($this->forms[$parentId]['GoodQty'] ?? 0);
+
+        if ($parentGood < 1) {
+            $this->notifyFail('Sub Process', 'The main process has no good quantity left to inspect.');
+            return;
+        }
+
+        $formId = (string) Str::uuid();
+
+        $this->forms[$formId] = $this->blankForm($formId, $parentId);
+        $this->forms[$formId]['total_inspect'] = $parentGood;
+        $this->forms[$parentId]['open'] = true;
+
+        $this->modalOpen[$formId] = true;
+        $this->modalMode[$formId] = 'add';
+        $this->resetModalFields();
+
+        $this->total_inspect = (string) $parentGood;
+
+        $this->calcGoodQty($formId);
+        $this->dispatch('scroll-to-form', formId: $formId);
+    }
+
+
+    private function recalc(string $formId): void
+    {
+        $this->calcGoodQty($formId);
+
+        if (empty($this->forms[$formId]['parent_form_id'] ?? null)) {
+            $this->refreshSubs($formId);
+        }
+    }
+
+    private function refreshSubs(string $parentId): void
+    {
+        $this->forms = $this->service()->syncSubTotals($this->forms, $parentId);
+
+        foreach (array_keys($this->service()->childrenOf($parentId, $this->forms)) as $childId) {
+            $this->dispatch(
+                'FetchHfNo',
+                hf_id: $this->forms[$childId]['hf_id'] ?? '',
+                total_inspect: (int) ($this->forms[$childId]['total_inspect'] ?? 0),
+                form_id: $childId,
+            );
+
+            $this->calcGoodQty($childId);
+        }
+    }
+
+    private function blankForm(string $formId, ?string $parentFormId): array
+    {
+        return [
             'hf_id'              => '',
             'formId'             => $formId,
+            'parent_form_id'     => $parentFormId,
             'hf_name'            => '',
             'finishingProcedure' => '',
             'total_inspect'      => '',
@@ -73,14 +145,8 @@ new class extends Component
             'TotalRework'        => 0,
             'Remarks'            => '',
             'Operation'          => 'VI',
-            'Process'            => '100% VI',
+            'Process'            => $parentFormId ? 'Sub Process' : '100% VI',
         ];
-
-        $this->modalOpen[$formId] = true;
-        $this->modalMode[$formId] = 'add';
-        $this->resetModalFields();
-
-        $this->dispatch('scroll-to-form', formId: $formId);
     }
 
     public function toggle(string $formId): void
@@ -94,17 +160,36 @@ new class extends Component
     {
         if (! isset($this->forms[$formId])) return;
 
-        $this->dispatch('removeError', $formId);
-        $this->dispatch('NeedToDeleteForm', $this->forms[$formId]);
+        $parentId = $this->forms[$formId]['parent_form_id'] ?? null;
 
-        unset($this->forms[$formId], $this->modalOpen[$formId], $this->hasErrorForm[$formId]);
-        $this->resetErrorBag('forms.' . $formId);
+        // Removing a main process also removes its sub processes (and only those)
+        $idsToRemove = [$formId];
 
-        // Re-index to force Livewire to re-render
-        $this->forms = array_values($this->forms) === $this->forms
-            ? $this->forms
-            : [...$this->forms];
+        if (! $parentId) {
+            $idsToRemove = [...$idsToRemove, ...array_keys($this->service()->childrenOf($formId, $this->forms))];
+        }
+
+        // Children first, parent last
+        foreach (array_reverse($idsToRemove) as $id) {
+            $this->dispatch('removeError', $id);
+            $this->dispatch('NeedToDeleteForm', $this->forms[$id]);
+
+            unset(
+                $this->forms[$id],
+                $this->modalOpen[$id],
+                $this->modalMode[$id],
+                $this->hasErrorForm[$id],
+                $this->defectNg[$id],
+                $this->reworkNg[$id]
+            );
+            $this->resetErrorBag('forms.' . $id);
+        }
+
+        $this->forms = [...$this->forms];
+        $this->hasError = in_array(true, $this->hasErrorForm, strict: true);
     }
+
+
 
     // ----------------------------------------------------------
     // HF modal (save / edit / close)
@@ -115,9 +200,13 @@ new class extends Component
         $this->modalMode[$formId] = 'edit';
         $this->modalOpen[$formId] = true;
 
+        $parentId = $this->forms[$formId]['parent_form_id'] ?? null;
+
         $this->hf_id              = $this->forms[$formId]['hf_id'] ?? '';
-        $this->total_inspect      = (string) ($this->forms[$formId]['total_inspect'] ?? '');
         $this->finishingProcedure = $this->forms[$formId]['finishingProcedure'] ?? '';
+        $this->total_inspect      = $parentId && isset($this->forms[$parentId])
+            ? (string) ($this->forms[$parentId]['GoodQty'] ?? 0)
+            : (string) ($this->forms[$formId]['total_inspect'] ?? '');
     }
 
     public function closeModal(string $formId): void
@@ -128,8 +217,15 @@ new class extends Component
 
     public function saveHF(string $formId): void
     {
+        $parentId = $this->forms[$formId]['parent_form_id'] ?? null;
+
+        // Sub process always inspects the parent's good qty
+        if ($parentId && isset($this->forms[$parentId])) {
+            $this->total_inspect = (string) ($this->forms[$parentId]['GoodQty'] ?? 0);
+        }
+
         // Copy modal inputs into the form before passing to service
-        $this->forms[$formId]['hf_id']             = $this->hf_id;
+        $this->forms[$formId]['hf_id']              = $this->hf_id;
         $this->forms[$formId]['total_inspect']      = $this->total_inspect;
         $this->forms[$formId]['finishingProcedure'] = $this->finishingProcedure;
 
@@ -155,7 +251,8 @@ new class extends Component
             form_id: $formId,
         );
 
-        $this->calcGoodQty($formId);
+        // Recalculates this form; for a main process it also refreshes its sub processes
+        $this->recalc($formId);
         $this->resetModalFields();
     }
 
@@ -163,14 +260,13 @@ new class extends Component
     {
         $this->modalOpen[$formId] = false;
 
-        // If the form was never saved (no hf_id), remove it entirely
+        // Never saved (no hf_id) -> remove it entirely
         if (empty($this->forms[$formId]['hf_id'] ?? '')) {
-            unset($this->forms[$formId], $this->modalOpen[$formId]);
+            unset($this->forms[$formId], $this->modalOpen[$formId], $this->modalMode[$formId], $this->hasErrorForm[$formId]);
         }
 
         $this->resetModalFields();
     }
-
     public function checkHf(string $formId): void
     {
         if (isset($this->forms[$formId]) && !empty($this->hf_id)) {
@@ -250,8 +346,9 @@ new class extends Component
         $formId = $data['formId'] ?? null;
 
         if ($formId && isset($this->forms[$formId])) {
+            $this->defectNg[$formId] = collect($this->forms[$formId]['defects'] ?? [])->sum('qty');
             $this->reworkNg[$formId] = collect($this->forms[$formId]['rework'] ?? [])->sum('qty');
-            $this->calcGoodQty($formId);
+            $this->recalc($formId);
         }
     }
 
@@ -276,8 +373,9 @@ new class extends Component
         }
     }
 
-       #[On('read-only')]
-    public function readOnly(bool $readonly = false){
+    #[On('read-only')]
+    public function readOnly(bool $readonly = false)
+    {
         $this->readonly = $readonly;
     }
 
@@ -291,8 +389,8 @@ new class extends Component
         );
 
         if ($result) {
-            $this->forms[$formId]['GoodQty'] = $result['GoodQty'];
-            $this->forms[$formId]['TotalNg']  = $result['TotalNg'];
+            $this->forms[$formId]['GoodQty']     = $result['GoodQty'];
+            $this->forms[$formId]['TotalNg']     = $result['TotalNg'];
             $this->forms[$formId]['TotalRework'] = $result['TotalRework'];
         }
     }
@@ -350,6 +448,14 @@ new class extends Component
         if (empty($this->ppf) || $this->ppf == 0) {
             $this->notifyFail('Error', 'Please Enter PPF');
             return;
+        }
+
+        foreach ($this->forms as $f) {
+            $parent = $f['parent_form_id'] ?? null;
+            if ($parent && ! isset($this->forms[$parent])) {
+                $this->notifyFail('Error', 'A sub process has no parent process.');
+                return;
+            }
         }
 
         try {
@@ -417,7 +523,7 @@ new class extends Component
 
 <div>
     @include('components.ui.dropdown.dropdown-section')
-    
+
     @unless($readonly)
     <div class="flex justify-center">
         <button

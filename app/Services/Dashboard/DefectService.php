@@ -3,6 +3,9 @@
 namespace App\Services\Dashboard;
 
 use App\Repositories\Dashboard\DefectRepository;
+use App\Repositories\ProcessRecord\SubProcessRepository;
+use App\Support\ProcessType;
+use App\Support\SubProcessNester;
 
 class DefectService
 {
@@ -17,7 +20,6 @@ class DefectService
         $rows = $this->repo->getDefectsGrouped($ppf)
             ->filter(fn($row) => (int)$row->total_qty > 0);
         $allSmalls = $this->repo->getSmallDefectsForPpf($ppf);
-        // dd($allSmalls, $rows);
 
         $defects = $rows->map(fn($row) => [
             'operatorid' => $row->inspectorId,
@@ -25,8 +27,15 @@ class DefectService
             'type' => $row->defect,
             'qty' => (int)$row->total_qty,
             'dateEncode' => $row->latest_date,
-            'process' => $row->process
+            'process' => $row->process,
+            'isSub' => ProcessType::isSub($row->process),
         ]);
+
+        // Sub processes sit right under their parent instead of following the query order
+        $defects = SubProcessNester::nest(
+            $defects,
+            app(SubProcessRepository::class)->parentHfidBySubHfid($ppf)
+        );
 
         $smallDefects = [];
 
