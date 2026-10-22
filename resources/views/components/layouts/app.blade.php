@@ -16,22 +16,30 @@
     <script>
         document.addEventListener('livewire:init', () => {
             Livewire.hook('request', ({
+                component,
+                memo,
+                payload,
                 succeed,
                 fail
             }) => {
+                // memo.updates or payload has the method calls being sent in this request
+                const calls = payload?.calls?.map(c => c.method) ?? [];
+
+                // skip requests that are ONLY property updates (e.g. search binding)
+                // or that don't include a method you want to show loading for
+                const excludedMethods = ['$refresh']; // add wire:model-only updates here if needed
+                const isOnlyExcluded = calls.length > 0 && calls.every(m => excludedMethods.includes(m));
+
+                if (calls.length === 0 || isOnlyExcluded) return;
+
                 window.dispatchEvent(new CustomEvent('show-loading', {
                     detail: {
                         message: 'Loading...'
                     }
                 }));
 
-                succeed(() => {
-                    window.dispatchEvent(new CustomEvent('hide-loading'));
-                });
-
-                fail(() => {
-                    window.dispatchEvent(new CustomEvent('hide-loading'));
-                });
+                succeed(() => window.dispatchEvent(new CustomEvent('hide-loading')));
+                fail(() => window.dispatchEvent(new CustomEvent('hide-loading')));
             });
         });
     </script>

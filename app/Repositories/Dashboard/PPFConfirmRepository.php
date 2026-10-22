@@ -61,6 +61,7 @@ class PPFConfirmRepository
                 );
             })
             ->groupBy('PPFNo')
+            ->orderByRaw('MAX(DateEncode) DESC')
             ->paginate($perPage);
 
         $ppfNos = $paginated->getCollection()

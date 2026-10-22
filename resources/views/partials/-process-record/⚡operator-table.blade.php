@@ -25,7 +25,7 @@ new class extends Component
 
     public function editPPF(int $ppf)
     {
-        $this->dispatch('confirm-ppf', ppf: $ppf, encoder: $this->userEncoder, readonly: false);
+        $this->dispatch('confirm-ppf', ppf: $ppf, encoder: $this->userEncoder, readonly: false, isDefectEncoding : true);
         $this->dispatch('read-only', readonly: false);
     }
 

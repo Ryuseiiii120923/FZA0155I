@@ -60,7 +60,7 @@ new class extends Component
 
         if ($this->action === 'delete') {
             $this->dispatch('confirm-ppf', ppf: $ppf, readonly: true, action: $this->action);
-             $this->dispatch('read-only', readonly: true);
+            $this->dispatch('read-only', readonly: true);
             return;
         }
         $encoder = Auth::user()->社員CD;
@@ -96,7 +96,7 @@ new class extends Component
             </thead>
             <tbody class="bg-gray-700">
                 @forelse($this->ppfdata as $data)
-                
+
                 <tr>
                     <td class="px-4 py-2 text-center">{{ (int)$data->ppfno }}</td>
                     <td class="px-4 py-2 text-center">{{ (int)$data->total_inspect }} / {{ $data->expct }}</td>
@@ -144,7 +144,7 @@ new class extends Component
         </table>
     </div>
 
-    <div class="w-full">
+    <div class="w-full overflow-x-auto">
         {{ $this->ppfdata->links() }}
     </div>
     @endunless

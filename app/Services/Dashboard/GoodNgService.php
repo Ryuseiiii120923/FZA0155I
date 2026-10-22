@@ -15,7 +15,7 @@ class GoodNgService
         $check = app(PPFRepository::class)->fetchHeadData($ppf);
 
         return [
-            'expct' => (int) $check->未仕上 ?? 0,
+            'expct' => (int) ($check->未仕上 ?? 0),
             'goodqty'   => (int) $result['goodQty'],
             'totalNG'   => (int) $result['totalNG'],
             'lackqty'   => (int) $result['lackQty'],

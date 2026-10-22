@@ -31,14 +31,25 @@ new class extends Component
     public string $currentPage = 'dashboard';
 
     #[On('confirm-ppf')]
-    public function checkPPF(int $ppf = 0, int $encoder = 0, bool $readonly = false, string $action = 'add')
+    public function checkPPF(int $ppf = 0, int $encoder = 0, bool $readonly = false, string $action = '', bool $isDefectEncoding = false)
     {
+        if ($isDefectEncoding === false) {
+            if ($action != '') {
+                $this->action = $action;
+            }
+            if ($this->action === '') {
+                $this->notifyFail('Error', 'Please select action first.');
+                return;
+            }
+        }
+
+        $this->startLoading();
         $encoder = Auth::user()->社員CD;
-        $this->action = $action;
         $this->ppf = ($ppf != 0) ? $ppf : $this->ppf;
         $result = app(PPFService::class)->fetchMainData($this->ppf, $action);
         if (isset($result['error'])) {
             $this->notifyFail('Error', $result['error']);
+            $this->stopLoading();
             return;
         }
         $this->fill($result);
@@ -51,6 +62,13 @@ new class extends Component
         if ($encoder !== 0) {
             $this->dispatch('edit-ppf', ppf: $this->ppf, encoder: $encoder, readonly: $readonly);
         }
+        $this->stopLoading();
+    }
+
+    #[On('action-changed')]
+    public function actionChanged(string $action)
+    {
+        $this->action = $action;
     }
 
     #[On('post-ppf')]
@@ -124,7 +142,6 @@ new class extends Component
                 placeholder="Enter PPF"
                 wire:model="ppf"
                 @blur="
-        window.dispatchEvent(new CustomEvent('show-loading', { detail: { message: 'Checking PPF...' } }));
         $wire.set('ppf', parseInt($event.target.value) || 0).then(() => $wire.checkPPF())
     ">
         </div>
