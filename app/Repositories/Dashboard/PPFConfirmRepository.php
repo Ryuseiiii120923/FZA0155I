@@ -86,18 +86,16 @@ class PPFConfirmRepository
     private function queryPending(?string $search): Collection
     {
         return MasterData::query()
-            ->select('ppfno')
-            ->selectRaw('SUM(total_inspect) as total_inspect')
-            ->selectRaw('MAX(updated_at) as updated_at')
-            ->where('operation', 'HF')
+            ->from('inspector_pr_hf_summary')
+            ->select('ppfno', 'total_inspect', 'updated_at')
             ->whereNotExists(function ($query) {
                 $query->select(DB::raw(1))
-                    ->from('FF.dbo.HFDefect')
-                    ->whereColumn('FF.dbo.HFDefect.PPFNoStr', 'PRecord.dbo.inspector_pr.ppfno');
+                    ->from('FF.dbo.HFDefectSummary')
+                    ->whereColumn('FF.dbo.HFDefectSummary.PPFNoStr', 'PRecord.dbo.inspector_pr_hf_summary.ppfno');
             })
             ->when($search, fn($q) => $q->where('ppfno', 'like', "%{$search}%"))
-            ->groupBy('ppfno')
-            ->orderByRaw('MAX(updated_at) DESC')
+            ->orderByDesc('updated_at')
+            ->orderByDesc('ppfno')
             ->limit(self::MAX_ROWS)
             ->get();
     }
