@@ -18,7 +18,7 @@ class PPFConfirmRepository
     private const TTL_SECONDS = 60;
     private const MAX_ROWS = 500;
 
-    public function fetchData(?string $search = null, int $perPage = 20)
+    public function fetchData(?string $search = null, int $perPage = 5)
     {
         return $this->cachedPaginator(
             'pending',
@@ -124,17 +124,17 @@ class PPFConfirmRepository
             ->orderByRaw('MAX(updated_at) DESC')
             ->paginate($perPage);
 
-        // Avoid N+1 queries
         $ppfNos = $paginated->getCollection()
             ->pluck('ppfno')
             ->map(fn($ppf) => (int) $ppf);
 
         $checkHF = CheckHF::whereIn('流動NO', $ppfNos)
             ->get()
+            ->unique('流動NO')  
             ->keyBy('流動NO');
 
         $paginated->getCollection()->transform(function ($item) use ($checkHF) {
-            $hf = CheckHF::where('流動NO', (int) $item->ppfno)->first();
+            $hf = $checkHF->get((int) $item->ppfno);
             $item->expct = $hf ? round($hf->未仕上) : 0;
             return $item;
         });
