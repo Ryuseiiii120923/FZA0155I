@@ -5,108 +5,15 @@ namespace App\Repositories\Dashboard;
 use App\Models\AddDefect;
 use App\Models\Inspector\MasterData;
 use App\Models\PPFHeader\CheckHF;
-use Closure;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class PPFConfirmRepository
 {
-    private const VERSION_KEY = 'ppf_confirm:version';
-    private const TTL_SECONDS = 60;
-    private const MAX_ROWS = 500;
 
-    public function fetchData(?string $search = null, int $perPage = 5)
-    {
-        return $this->cachedPaginator(
-            'pending',
-            $search,
-            $perPage,
-            fn() => $this->queryPending($search, $perPage)
-        );
-    }
-
-    public function fetchSavedData(?string $search = null, int $perPage = 20)
-    {
-        return $this->cachedPaginator(
-            'saved',
-            $search,
-            $perPage,
-            fn() => $this->querySaved($search, $perPage)
-        );
-    }
-
-    public function invalidate(): void
-    {
-        Cache::forever(self::VERSION_KEY, (string) Str::uuid());
-    }
-
-    private function cachedPaginator(string $type, ?string $search, int $perPage, Closure $query): LengthAwarePaginator
-    {
-        $page   = Paginator::resolveCurrentPage();
-        $offset = ($page - 1) * $perPage;
-
-        // Lampas na sa 1k, huwag nang mag-query
-        if ($offset >= self::MAX_ROWS) {
-            return new LengthAwarePaginator(
-                collect(),
-                self::MAX_ROWS,
-                $perPage,
-                $page,
-                ['path' => Paginator::resolveCurrentPath(), 'pageName' => 'page']
-            );
-        }
-
-        $remaining = self::MAX_ROWS - $offset;
-
-        $payload = Cache::remember(
-            $this->cacheKey($type, $search, $perPage),
-            self::TTL_SECONDS,
-            function () use ($query, $remaining) {
-                $paginated = $query();
-
-                return [
-                    'total' => min($paginated->total(), self::MAX_ROWS),
-                    'items' => $paginated->getCollection()
-                        ->take($remaining) // pang-huling page, huwag lumampas sa 1k
-                        ->map(fn($item) => [
-                            'ppfno'         => $item->ppfno,
-                            'total_inspect' => $item->total_inspect,
-                            'updated_at'    => (string) $item->updated_at,
-                            'expct'         => $item->expct,
-                        ])->all(),
-                ];
-            }
-        );
-
-        return new LengthAwarePaginator(
-            collect($payload['items'])->map(fn($row) => (object) $row),
-            $payload['total'],
-            $perPage,
-            $page,
-            [
-                'path'     => Paginator::resolveCurrentPath(),
-                'pageName' => 'page',
-            ]
-        );
-    }
-
-    private function cacheKey(string $type, ?string $search, int $perPage): string
-    {
-        $version = Cache::rememberForever(self::VERSION_KEY, fn() => (string) Str::uuid());
-        $page    = Paginator::resolveCurrentPage();
-        $search  = trim((string) $search);
-
-        return "ppf_confirm:{$version}:{$type}:" . md5("{$search}|{$perPage}|{$page}");
-    }
-
-    // ===== ORIGINAL fetchData body, untouched =====
-    private function queryPending(?string $search, int $perPage)
+    public function fetchData(?string $search = null, int $perPage = 20)
     {
         $paginated = MasterData::select('ppfno')
-            ->Where('operation', 'HF')
+        ->Where('operation', 'HF')
             ->selectRaw('SUM(total_inspect) as total_inspect')
             ->selectRaw('MAX(updated_at) as updated_at')
             ->whereNotExists(function ($query) {
@@ -124,25 +31,24 @@ class PPFConfirmRepository
             ->orderByRaw('MAX(updated_at) DESC')
             ->paginate($perPage);
 
+        // Avoid N+1 queries
         $ppfNos = $paginated->getCollection()
             ->pluck('ppfno')
             ->map(fn($ppf) => (int) $ppf);
 
         $checkHF = CheckHF::whereIn('流動NO', $ppfNos)
             ->get()
-            ->unique('流動NO')  
             ->keyBy('流動NO');
 
         $paginated->getCollection()->transform(function ($item) use ($checkHF) {
-            $hf = $checkHF->get((int) $item->ppfno);
+            $hf = CheckHF::where('流動NO', (int) $item->ppfno)->first();
             $item->expct = $hf ? round($hf->未仕上) : 0;
             return $item;
         });
         return $paginated;
     }
 
-    // ===== ORIGINAL fetchSavedData body, untouched =====
-    private function querySaved(?string $search, int $perPage)
+    public function fetchSavedData(?string $search = null, int $perPage = 20)
     {
         $paginated = AddDefect::with('finalInspection')
             ->selectRaw('PPFNo as ppfno')
