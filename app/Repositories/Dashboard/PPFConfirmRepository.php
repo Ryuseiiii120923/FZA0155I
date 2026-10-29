@@ -18,6 +18,9 @@ class PPFConfirmRepository
     private const TTL_SECONDS = 60;
     private const MAX_ROWS = 500;
 
+    // Gawing true PAGKATAPOS patakbuhin ang SQL para sa PPFNoStr column at index
+    private const USE_PPFNOSTR_COLUMN = false;
+
     public function fetchData(?string $search = null, int $perPage = 5)
     {
         return $this->cachedPaginator(
@@ -48,7 +51,7 @@ class PPFConfirmRepository
         $page   = Paginator::resolveCurrentPage();
         $offset = ($page - 1) * $perPage;
 
-        // Lampas na sa 1k, huwag nang mag-query
+        // Lampas na sa MAX_ROWS, huwag nang mag-query
         if ($offset >= self::MAX_ROWS) {
             return new LengthAwarePaginator(
                 collect(),
@@ -70,7 +73,7 @@ class PPFConfirmRepository
                 return [
                     'total' => min($paginated->total(), self::MAX_ROWS),
                     'items' => $paginated->getCollection()
-                        ->take($remaining) // pang-huling page, huwag lumampas sa 1k
+                        ->take($remaining)
                         ->map(fn($item) => [
                             'ppfno'         => $item->ppfno,
                             'total_inspect' => $item->total_inspect,
@@ -80,6 +83,7 @@ class PPFConfirmRepository
                 ];
             }
         );
+
         return new LengthAwarePaginator(
             collect($payload['items'])->map(fn($row) => (object) $row),
             $payload['total'],
@@ -101,7 +105,6 @@ class PPFConfirmRepository
         return "ppf_confirm:{$version}:{$type}:" . md5("{$search}|{$perPage}|{$page}");
     }
 
-    // ===== ORIGINAL fetchData body, untouched =====
     private function queryPending(?string $search, int $perPage)
     {
         $paginated = MasterData::select('ppfno')
@@ -109,12 +112,13 @@ class PPFConfirmRepository
             ->selectRaw('SUM(total_inspect) as total_inspect')
             ->selectRaw('MAX(updated_at) as updated_at')
             ->whereNotExists(function ($query) {
+                $column = self::USE_PPFNOSTR_COLUMN
+                    ? 'FF.dbo.HFDefect.PPFNoStr'
+                    : 'CAST(CAST(FF.dbo.HFDefect.PPFNo AS BIGINT) AS NVARCHAR(50))';
+
                 $query->select(DB::raw(1))
                     ->from('FF.dbo.HFDefect')
-                    ->whereRaw("
-                    CAST(CAST(FF.dbo.HFDefect.PPFNo AS BIGINT) AS NVARCHAR(50))
-                    = PRecord.dbo.inspector_pr.ppfno
-                ");
+                    ->whereRaw("{$column} = PRecord.dbo.inspector_pr.ppfno");
             })
             ->when($search, function ($query) use ($search) {
                 $query->where('ppfno', 'like', "%{$search}%");
@@ -123,29 +127,13 @@ class PPFConfirmRepository
             ->orderByRaw('MAX(updated_at) DESC')
             ->paginate($perPage);
 
-        $ppfNos = $paginated->getCollection()
-            ->pluck('ppfno')
-            ->map(fn($ppf) => (int) $ppf);
-
-        $checkHF = CheckHF::whereIn('流動NO', $ppfNos)
-            ->get()
-            ->unique(fn($r) => (int) $r->流動NO)    // first row per PPF, parang ->first()
-            ->keyBy(fn($r) => (int) $r->流動NO);    // int na key, kahit string sa DB
-
-        $paginated->getCollection()->transform(function ($item) use ($checkHF) {
-
-            $hf = $checkHF->get((int) $item->ppfno);
-            $item->expct = $hf ? round($hf->未仕上) : 0;
-            return $item;
-        });
-        return $paginated;
+        return $this->attachExpct($paginated);
     }
 
-    // ===== ORIGINAL fetchSavedData body, untouched =====
     private function querySaved(?string $search, int $perPage)
     {
-        $paginated = AddDefect::with('finalInspection')
-            ->selectRaw('PPFNo as ppfno')
+        // Tinanggal ang with('finalInspection'): hindi ito kasama sa cache payload
+        $paginated = AddDefect::selectRaw('PPFNo as ppfno')
             ->selectRaw('MAX(Total) as total_inspect')
             ->selectRaw('MAX(DateEncode) as updated_at')
             ->when($search, function ($q) use ($search) {
@@ -158,19 +146,30 @@ class PPFConfirmRepository
             ->orderByRaw('MAX(DateEncode) DESC')
             ->paginate($perPage);
 
+        return $this->attachExpct($paginated);
+    }
+
+    /**
+     * Pareho ang lookup ng expct para sa pending at saved,
+     * kaya hindi na magkakaiba ang lumalabas sa dalawang tab.
+     */
+    private function attachExpct($paginated)
+    {
         $ppfNos = $paginated->getCollection()
             ->pluck('ppfno')
             ->map(fn($ppf) => (int) $ppf);
 
         $checkHF = CheckHF::whereIn('流動NO', $ppfNos)
             ->get()
-            ->keyBy('流動NO');
+            ->unique(fn($r) => (int) $r->流動NO)   
+            ->keyBy(fn($r) => (int) $r->流動NO);   
 
         $paginated->getCollection()->transform(function ($item) use ($checkHF) {
-            $hf = $checkHF->get($item->ppfno);
+            $hf = $checkHF->get((int) $item->ppfno);
             $item->expct = $hf ? round($hf->未仕上) : 0;
             return $item;
         });
+
         return $paginated;
     }
 }
