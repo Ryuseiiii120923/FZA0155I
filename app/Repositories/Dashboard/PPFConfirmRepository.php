@@ -39,7 +39,7 @@ class PPFConfirmRepository
         $rows = collect($this->cachedRows($type, $search));
 
         return new LengthAwarePaginator(
-            $rows->forPage($page, $perPage)->values()->map(fn ($row) => (object) $row),
+            $rows->forPage($page, $perPage)->values()->map(fn($row) => (object) $row),
             $rows->count(),
             $perPage,
             $page,
@@ -65,7 +65,7 @@ class PPFConfirmRepository
                     : $this->querySaved($search);
 
                 return $this->attachExpct($rows)
-                    ->map(fn ($item) => [
+                    ->map(fn($item) => [
                         'ppfno'         => $item->ppfno,
                         'total_inspect' => $item->total_inspect,
                         'updated_at'    => (string) $item->updated_at,
@@ -78,7 +78,7 @@ class PPFConfirmRepository
 
     private function cacheKey(string $type, ?string $search): string
     {
-        $version = Cache::rememberForever(self::VERSION_KEY, fn () => (string) Str::uuid());
+        $version = Cache::rememberForever(self::VERSION_KEY, fn() => (string) Str::uuid());
 
         return "ppf_confirm:{$version}:{$type}:" . md5(trim((string) $search));
     }
@@ -95,7 +95,7 @@ class PPFConfirmRepository
                     ->from('FF.dbo.HFDefect')
                     ->whereColumn('FF.dbo.HFDefect.PPFNoStr', 'PRecord.dbo.inspector_pr.ppfno');
             })
-            ->when($search, fn ($q) => $q->where('ppfno', 'like', "%{$search}%"))
+            ->when($search, fn($q) => $q->where('ppfno', 'like', "%{$search}%"))
             ->groupBy('ppfno')
             ->orderByRaw('MAX(updated_at) DESC')
             ->limit(self::MAX_ROWS)
@@ -104,18 +104,17 @@ class PPFConfirmRepository
 
     private function querySaved(?string $search): Collection
     {
-        return AddDefect::query()
+        return DB::table('FF.dbo.HFDefectSummary')
             ->selectRaw('PPFNo as ppfno')
-            ->selectRaw('MAX(Total) as total_inspect')
-            ->selectRaw('MAX(DateEncode) as updated_at')
+            ->selectRaw('Total as total_inspect')
+            ->selectRaw('DateEncode as updated_at')
             ->when($search, function ($q) use ($search) {
                 $q->whereRaw(
                     'CAST(CAST(PPFNo AS BIGINT) AS NVARCHAR(50)) LIKE ?',
                     ["%{$search}%"]
                 );
             })
-            ->groupBy('PPFNo')
-            ->orderByRaw('MAX(DateEncode) DESC')
+            ->orderByDesc('DateEncode')
             ->limit(self::MAX_ROWS)
             ->get();
     }
@@ -125,12 +124,12 @@ class PPFConfirmRepository
      */
     private function attachExpct(Collection $rows): Collection
     {
-        $ppfNos = $rows->pluck('ppfno')->map(fn ($ppf) => (int) $ppf)->unique()->values();
+        $ppfNos = $rows->pluck('ppfno')->map(fn($ppf) => (int) $ppf)->unique()->values();
 
         $checkHF = CheckHF::whereIn('流動NO', $ppfNos)
             ->get()
-            ->unique(fn ($r) => (int) $r->流動NO)
-            ->keyBy(fn ($r) => (int) $r->流動NO);
+            ->unique(fn($r) => (int) $r->流動NO)
+            ->keyBy(fn($r) => (int) $r->流動NO);
 
         return $rows->each(function ($item) use ($checkHF) {
             $hf = $checkHF->get((int) $item->ppfno);
