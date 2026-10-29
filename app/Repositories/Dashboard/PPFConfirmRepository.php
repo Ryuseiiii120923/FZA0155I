@@ -19,7 +19,7 @@ class PPFConfirmRepository
     private const MAX_ROWS = 500;
 
     // Gawing true PAGKATAPOS patakbuhin ang SQL para sa PPFNoStr column at index
-    private const USE_PPFNOSTR_COLUMN = false;
+    private const USE_PPFNOSTR_COLUMN = true;
 
     public function fetchData(?string $search = null, int $perPage = 5)
     {
