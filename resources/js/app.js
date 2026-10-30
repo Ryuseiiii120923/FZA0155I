@@ -1,7 +1,5 @@
 import "./bootstrap";
 
-import { BrowserMultiFormatReader } from "@zxing/library";
-
 import "flowbite";
 
 import flatpickr from "flatpickr";
