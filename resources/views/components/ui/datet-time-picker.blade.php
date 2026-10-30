@@ -6,7 +6,7 @@
         viewMonth: new Date().getMonth(),
         view: 'days',
         yearRangeStart: new Date().getFullYear() - 6,
-        hfDateWire: $wire.$entangle('hfDate'),
+        hfDateWire: $wire.$entangle('hfDate').live,
 
         initFromWire() {
             const val = this.hfDateWire;
@@ -43,7 +43,11 @@
         },
         selectMonth(m) { this.viewMonth = m; this.view = 'days'; },
         selectYear(y) { this.viewYear = y; this.view = 'months'; },
-        confirm() { this.hfDateWire = this.displayVal; this.open = false; this.view = 'days'; },
+        confirm() {
+            this.hfDateWire = this.displayVal;
+            this.open = false;
+            this.view = 'days';
+        },
 
         daysInMonth() { return new Date(this.viewYear, this.viewMonth + 1, 0).getDate(); },
         firstDay() { return new Date(this.viewYear, this.viewMonth, 1).getDay(); },
