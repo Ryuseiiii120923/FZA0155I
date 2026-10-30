@@ -1,5 +1,5 @@
         <div class="flex-shrink-0 mx-5 sm:mx-2"
-          x-data="{
+            x-data="{
     scanning: false,
     codeReader: null,
     stream: null,
