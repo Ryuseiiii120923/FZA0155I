@@ -31,17 +31,18 @@ class GoodNgService
         int $reworkqty = 0,
         int $sampleqty = 0,
     ): array {
-       
         $goodqty = $base['expct']
             + $excssqty
             - $lackqty
             - $reworkqty
-            - $sampleqty;
+            - $sampleqty
+            - $base['totalNG'];
 
         $denominator = $goodqty + $base['totalNG'];
-        $ngratioqty  = $denominator === 0
-            ? 0
-            : number_format(($base['totalNG'] / $denominator) * 100, 2);
+
+        $ngratioqty = $denominator === 0
+            ? 0.0
+            : round(($base['totalNG'] / $denominator) * 100, 2);
 
         return [
             'goodqty'    => $goodqty,

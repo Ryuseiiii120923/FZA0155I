@@ -49,9 +49,9 @@ new class extends Component
         }
 
         $result = app(GoodNgService::class)->computeGoodNg(
-            base:      $this->base,
-            excssqty:  $this->excssqty,
-            lackqty:   $this->lackqty,
+            base: $this->base,
+            excssqty: $this->excssqty,
+            lackqty: $this->lackqty,
             reworkqty: $this->reworkqty,
             sampleqty: $this->sampleqty,
         );

@@ -200,28 +200,4 @@ new class extends Component
             wire:model="opt"
             readonly />
     </div>
-    <div class="w-full border rounded p-4 mt-4">
-        <div class="flex flex-col mt-3 w-11/12 sm:w-1/3" @if($currentPage==='defect' ) hidden @endif>
-            <!-- Label -->
-            <label for="ProgressInsp" class="block text-sm font-medium text-black">Inspection Progress</label>
-            <!-- Input + Button on same line -->
-            <div class="flex items-center gap-2 mt-1"> <input type="text"
-                    id="ProgressInsp"
-                    class="flex-1 border border-black rounded-md px-2 py-1 me-4"
-                    placeholder=" "
-                    required
-                    wire:model="progressInsp"
-                    readonly>
-                @unless($action != 'add')
-                <button type="button"
-                    wire:click="acceptProgressQty" @if($isShowAccept) hidden @endif class="px-4 py-1 ms-3 bg-blue-600 text-white rounded-md
-               hover:bg-blue-700 hover:shadow-md transition duration-200"
-                    wire:confirm="Are you sure you want to accept this?">
-                    Accept
-                </button>
-                @endunless
-            </div>
-        </div>
-    </div>
-
 </div>
