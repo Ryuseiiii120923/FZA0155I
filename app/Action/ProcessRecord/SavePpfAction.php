@@ -7,6 +7,7 @@ use App\Models\Auth\WorkerName;
 use App\Repositories\Defect\DefectRepository;
 use App\Repositories\ProcessRecord\MasterDataPRRepository;
 use App\Repositories\Rework\ReworkRepository;
+use App\Services\ProcessRecord\ProcessRecordRefresher;
 use App\Support\ProcessType;
 use Illuminate\Support\Facades\DB;
 
@@ -18,6 +19,7 @@ class SavePpfAction
         private MasterDataPRRepository $masterRepo,
         private DefectRepository $defectRepo,
         private ReworkRepository $reworkRepo,
+        private ProcessRecordRefresher $recordRefresher
     ) {}
 
     public function execute(array $forms, mixed $ppf, int $encoder, array $pendingDeletes): void
@@ -41,6 +43,8 @@ class SavePpfAction
             $this->saveSubData($forms, $ppf, $encoder);
             $this->saveGeneralData($forms, $ppf, $encoder);
         });
+
+        $this->recordRefresher->refreshAfterResponse($ppf);
     }
 
     private function assertValidHierarchy(array $forms, array $pendingDeletes): void
