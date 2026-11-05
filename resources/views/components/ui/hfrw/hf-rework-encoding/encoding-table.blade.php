@@ -19,7 +19,7 @@
 
             <tbody class="bg-gray-700">
                 @forelse ($this->pendingRework as $data )
-                <tr wire:key="rework-{{ $data['ppfno'] }}">
+                <tr wire:key="rework-encoding-{{ $data['ppfno'] }}">
                     <td class="px-4 py-2  text-center">{{ (int) $data['ppfno'] ?? '' }}</td>
                     <td class="px-4 py-2  text-center">{{ (int) $data['reworkNo'] ?? 0 }}</td>
                     <td class="px-4 py-2 text-center">{{ $data['qty'] ?? '' }}</td>

@@ -74,7 +74,7 @@ new class extends Component
             <tbody class="bg-gray-700">
                 @forelse($defects as $defect)
                 @php $isSub = ! empty($defect['isSub']); @endphp
-                <tr wire:key="defect-{{ $defect['operatorid'] }}-{{ $defect['process'] }}-{{ $defect['type'] }}"
+                <tr wire:key="defect-table-{{ $defect['operatorid'] }}-{{ $defect['process'] }}-{{ $defect['type'] }}"
                     @class(['bg-gray-600'=> $isSub])>
                     <td class="px-4 py-2 {{ $isSub ? 'pl-10 border-l-4 border-blue-300' : '' }}">
                         @if($isSub)↳ @endif{{ $defect['operatorid'] }}

@@ -75,7 +75,7 @@
                       :loadedDefects="$form['defects']"
                       :loadedSmallDefects="$form['smallDefects']"
                       :dispatchPrefix="'hfrw'"
-                      :key="'defects-'.$formId" />
+                      :key="'defects-modal-'.$formId" />
               </div>
           </div>
 

@@ -65,7 +65,7 @@ new class extends Component
             <tbody class="bg-gray-700">
                 @forelse ($rework as $reworks)
                 @php $isSub = ! empty($reworks['isSub']); @endphp
-                <tr wire:key="rework-{{ $reworks['operatorid'] }}-{{ $reworks['type'] }}" @class(['bg-gray-600'=> $isSub])>
+                <tr wire:key="rework-table-{{ $reworks['operatorid'] }}-{{ $reworks['type'] }}" @class(['bg-gray-600'=> $isSub])>
                     <td class="px-4 py-2 {{ $isSub ? 'pl-10 border-l-4 border-blue-300' : '' }}">
                         @if($isSub)↳ @endif{{ $reworks['operatorid'] }}
                     </td>

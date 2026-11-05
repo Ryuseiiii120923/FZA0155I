@@ -187,7 +187,7 @@
                         :loadedSmallDefects="$form['smallDefects']"
                         :dispatchPrefix="'operator'"
                         :readonly="$readonly"
-                        :key="'defects-'.$formId" />
+                        :key="'defects-dropdown-'.$formId" />
                 </div>
                 <div class="w-full sm:w-1/2 flex justify-center">
                     <livewire:partials::reworks.reworks
@@ -197,7 +197,7 @@
                         :totalInsp="(int) ($form['total_inspect'] ?? 0)"
                         :dispatchPrefix="'operator'"
                         :readonly="$readonly"
-                        :key="'reworks-'.$formId" />
+                        :key="'reworks-dropdown-'.$formId" />
                 </div>
             </div>
 
