@@ -26,13 +26,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 logger()->warning('Livewire corrupt snapshot', [
                     'component'     => $snap['memo']['name'] ?? 'unknown',
-                    'calls'         => array_map(fn ($x) => $x['method'] ?? null, $c['calls'] ?? []),
+                    'calls'         => array_map(fn($x) => $x['method'] ?? null, $c['calls'] ?? []),
                     'ua'            => $request->userAgent(),
                     'ip'            => $request->ip(),
                     'session'       => $request->hasSession() ? substr($request->session()->getId(), 0, 8) : null,
                     'key_fp'        => substr(hash('sha256', (string) config('app.key')), 0, 8),
                     'base_path'     => base_path(),
                     'config_cached' => file_exists(base_path('bootstrap/cache/config.php')),
+                    'reencode_same' => json_encode(json_decode($c['snapshot'] ?? '', true)) === ($c['snapshot'] ?? ''),
+                    'raw_len'       => strlen($c['snapshot'] ?? ''),
                     'referer'       => $request->headers->get('referer'),
                 ]);
             }
