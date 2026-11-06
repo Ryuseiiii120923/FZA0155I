@@ -14,7 +14,7 @@ new class extends Component
         {{ count($staged) > 0 ? 'Add Another Defect Type' : 'Defect Type' }}
     </p>
     <div class="flex flex-col gap-2">
-        @foreach ($largeDefectMaster as $Ldefects)
+        @foreach ($this->largeDefectMaster as $Ldefects)
         @php
             $isActive = $modalSelectedType=== $Ldefects->LargeDefect;
             $isStaged = collect($staged)->contains('type', $Ldefects->LargeDefect);
