@@ -26,13 +26,24 @@
                 Edit
             </button>
             <button
+                type="button"
                 @click.stop
                 @click.prevent="if (confirm(@js($isSub
-                    ? 'Are you sure you want to remove this sub process?'
-                    : 'Are you sure you want to remove this form? Its sub processes will be removed too.')))
-                    $wire.remove(@js($formId))"
-                class="rounded px-3 py-1 bg-red-600 text-white text-sm">
-                Remove
+        ? 'Are you sure you want to remove this sub process?'
+        : 'Are you sure you want to remove this form? Its sub processes will be removed too.')))
+        $wire.remove(@js($formId))"
+                wire:loading.attr="disabled"
+                wire:loading.class="opacity-70 cursor-wait"
+                wire:target="remove"
+                class="inline-flex items-center gap-1.5 rounded px-3 py-1 bg-red-600 text-white text-sm">
+
+                <svg wire:loading wire:target="remove" class="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+
+                <span wire:loading.remove wire:target="remove">Remove</span>
+                <span wire:loading wire:target="remove">Removing...</span>
             </button>
             <svg class="w-5 h-5 transform"
                 :class="{ 'rotate-180': open }"
@@ -161,12 +172,21 @@
                         </div>
 
                         <button
+                            type="button"
                             wire:click="saveHF('{{ $formId }}')"
                             wire:loading.attr="disabled"
+                            wire:loading.class="opacity-70 cursor-wait"
                             wire:target="saveHF"
                             @if(!empty($hasErrorForm[$formId])) disabled @endif
-                            class="bg-green-600 text-white px-4 py-2 rounded mt-2 w-full disabled:opacity-50">
-                            Save
+                            class="inline-flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded mt-2 w-full disabled:opacity-50">
+
+                            <svg wire:loading wire:target="saveHF" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                            </svg>
+
+                            <span wire:loading.remove wire:target="saveHF">Save</span>
+                            <span wire:loading wire:target="saveHF">Saving...</span>
                         </button>
 
                         <button
@@ -257,9 +277,17 @@
                 <button type="button"
                     wire:click="addSubProcess('{{ $formId }}')"
                     wire:loading.attr="disabled"
+                    wire:loading.class="cursor-wait"
                     wire:target="addSubProcess"
-                    class="bg-blue-100 text-blue-700 border border-blue-300 px-4 py-2 rounded-md text-sm hover:bg-blue-200 disabled:opacity-50">
-                    + Add Sub Process
+                    class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 border border-blue-300 px-4 py-2 rounded-md text-sm hover:bg-blue-200 disabled:opacity-50">
+
+                    <svg wire:loading wire:target="addSubProcess" class="animate-spin h-4 w-4 text-blue-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+
+                    <span wire:loading.remove wire:target="addSubProcess">+ Add Sub Process</span>
+                    <span wire:loading wire:target="addSubProcess">Adding...</span>
                 </button>
             </div>
             @endunless

@@ -46,7 +46,7 @@ new class extends Component
             }
 
             try {
-                app(DashboardSaveService::class)->save($this->ppf, $draft,$this->deviceUuid);
+                app(DashboardSaveService::class)->save($this->ppf, $draft, $this->deviceUuid);
                 app(DashboardDraftService::class)->clear($this->ppf);
                 $this->notifyReload('success', 'Inspection record saved.');
             } catch (\InvalidArgumentException $e) {
@@ -71,18 +71,42 @@ new class extends Component
     @if($action !== '' && $action !== 'view')
     <div class="flex justify-center p-6">
         <button
+            type="button"
             wire:click="submit"
-            @if($action=='delete' ) @click.prevent="if (confirm('Are you sure you want to delete this ppf?')) $wire.submit()" @endif
-            @class([ 'px-12 py-2.5 rounded-lg text-white text-sm font-medium transition' , 'bg-blue-700 hover:bg-blue-800'=> $action === 'add',
+            wire:loading.attr="disabled"
+            wire:loading.class="opacity-70 cursor-wait"
+            wire:target="submit"
+            @if($action==='delete' ) wire:confirm="Are you sure you want to delete this ppf?" @endif
+            @class([ 'inline-flex items-center justify-center gap-2 px-12 py-2.5 rounded-lg text-white text-sm font-medium transition' , 'bg-blue-700 hover:bg-blue-800'=> $action === 'add',
             'bg-green-700 hover:bg-green-800' => $action === 'edit',
             'bg-red-700 hover:bg-red-800' => $action === 'delete',
             ])>
-            {{ match($action) {
-            'add'    => 'Submit',
-            'edit'   => 'Update',
-            'delete' => 'Confirm Delete',
-            default  => 'Submit'
-        } }}
+
+            {{-- Spinner: lalabas lang habang nagsu-submit --}}
+            <svg wire:loading wire:target="submit" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+
+            {{-- Normal label --}}
+            <span wire:loading.remove wire:target="submit">
+                {{ match($action) {
+                    'add'    => 'Submit',
+                    'edit'   => 'Update',
+                    'delete' => 'Confirm Delete',
+                    default  => 'Submit'
+                } }}
+            </span>
+
+            {{-- Label habang naglo-load --}}
+            <span wire:loading wire:target="submit">
+                {{ match($action) {
+                    'add'    => 'Saving...',
+                    'edit'   => 'Updating...',
+                    'delete' => 'Deleting...',
+                    default  => 'Submitting...'
+                } }}
+            </span>
         </button>
     </div>
     @endif
