@@ -19,18 +19,21 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn(Request $request) => $request->is('api/*'),
         );
+
         $exceptions->render(function (CorruptComponentPayloadException $e, $request) {
             foreach ((array) $request->input('components', []) as $c) {
-                $raw = $c['snapshot'] ?? '';
-                $snap = json_decode($raw, true);
+                $snap = json_decode($c['snapshot'] ?? '', true) ?: [];
 
                 logger()->warning('Livewire corrupt snapshot', [
-                    'component'   => $snap['memo']['name'] ?? 'unparseable',
-                    'prop_keys'   => array_keys($snap['data'] ?? []),
-                    'json_error'  => json_last_error_msg(),
-                    'valid_utf8'  => mb_check_encoding($raw, 'UTF-8'),
-                    'size_bytes'  => strlen($raw),
-                    'url'         => $request->headers->get('referer'),
+                    'component'     => $snap['memo']['name'] ?? 'unknown',
+                    'calls'         => array_map(fn ($x) => $x['method'] ?? null, $c['calls'] ?? []),
+                    'ua'            => $request->userAgent(),
+                    'ip'            => $request->ip(),
+                    'session'       => $request->hasSession() ? substr($request->session()->getId(), 0, 8) : null,
+                    'key_fp'        => substr(hash('sha256', (string) config('app.key')), 0, 8),
+                    'base_path'     => base_path(),
+                    'config_cached' => file_exists(base_path('bootstrap/cache/config.php')),
+                    'referer'       => $request->headers->get('referer'),
                 ]);
             }
 

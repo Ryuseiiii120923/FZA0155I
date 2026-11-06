@@ -3,6 +3,7 @@
 use App\Repositories\Defect\DefectRepository;
 use App\Services\Defect\DefectStagingService;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
@@ -31,14 +32,16 @@ new class extends Component
 
     public ?string $formId         = null;
     public ?string $dispatchPrefix = null;
-     #[Locked]
+    #[Locked]
     public bool $readonly = false;
 
-    public function repository(){
+    public function repository()
+    {
         return app(DefectRepository::class);
     }
 
-    public function staging(){
+    public function staging()
+    {
         return app(DefectStagingService::class);
     }
 
@@ -53,12 +56,18 @@ new class extends Component
         $this->readonly = $readonly;
         $this->formId              = $formId;
         $this->dispatchPrefix      = $dispatchPrefix;
-        $this->largeDefectMaster   = $repository->getLargeDefects();
         $this->bootDefects($loadedDefects, $loadedSmallDefects);
     }
 
-     #[On('read-only')]
-    public function readOnly(bool $readonly = false){
+    #[Computed]
+    public function largeDefectMaster()
+    {
+        return $this->repository()->getLargeDefects();
+    }
+
+    #[On('read-only')]
+    public function readOnly(bool $readonly = false)
+    {
         $this->readonly = $readonly;
     }
 
@@ -69,12 +78,13 @@ new class extends Component
 
         // Normalise small defects shape from the event payload
         $this->smallDefects = collect($data['smallDefects'] ?? [])
-            ->map(fn($items) => collect($items)
-                ->map(fn($item) => [
-                    'type' => $item['type'] ?? null,
-                    'qty'  => $item['qty']  ?? '',
-                ])
-                ->toArray()
+            ->map(
+                fn($items) => collect($items)
+                    ->map(fn($item) => [
+                        'type' => $item['type'] ?? null,
+                        'qty'  => $item['qty']  ?? '',
+                    ])
+                    ->toArray()
             )
             ->toArray();
 

@@ -144,4 +144,4 @@ new class extends Component
                 placeholder=" " required wire:model="totalNG" readonly>
         </div>
     </div>
-    </x-ui.dashboard.wrapper.card-wrapper>
+    </x-ui.wrapper.card-wrapper
