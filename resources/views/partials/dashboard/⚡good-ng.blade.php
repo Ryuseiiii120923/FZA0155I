@@ -9,9 +9,9 @@ new class extends Component
 {
     public int $ppf = 0;
     public int $excssqty = 0;
-    public int $lackqty = 0;
-    public int $reworkqty = 0;
-    public int $sampleqty = 0;
+    public ?int $lackqty = 0;
+    public ?int $reworkqty = 0;
+    public ?int $sampleqty = 0;
     public int $goodqty = 0;
     public float $ngratioqty = 0;
     public bool $readonly = false;
@@ -50,10 +50,10 @@ new class extends Component
 
         $result = app(GoodNgService::class)->computeGoodNg(
             base: $this->base,
-            excssqty: $this->excssqty,
-            lackqty: $this->lackqty,
-            reworkqty: $this->reworkqty,
-            sampleqty: $this->sampleqty,
+            excssqty: (int) $this->excssqty,
+            lackqty: (int) $this->lackqty,
+            reworkqty: (int) $this->reworkqty,
+            sampleqty: (int) $this->sampleqty,
         );
 
         $this->goodqty    = $result['goodqty'];
