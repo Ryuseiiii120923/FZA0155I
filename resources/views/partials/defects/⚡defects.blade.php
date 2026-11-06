@@ -2,7 +2,6 @@
 
 use App\Repositories\Defect\DefectRepository;
 use App\Services\Defect\DefectStagingService;
-use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Validate;
@@ -11,7 +10,6 @@ use Livewire\Attributes\Locked;
 
 new class extends Component
 {
-    public Collection $largeDefectMaster;
     public array $defects = [];
     public array $smallDefects = [];
     public array $staged = [];
