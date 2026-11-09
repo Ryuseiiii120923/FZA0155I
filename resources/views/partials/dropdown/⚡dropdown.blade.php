@@ -529,8 +529,18 @@ new class extends Component
         <button
             type="button"
             wire:click="save"
-            class="mt-4 px-10 py-3 cursor-pointer rounded-xl bg-[#0F3C89] text-white text-sm font-medium hover:bg-blue-800 transition disabled:opacity-50">
-            Save
+            wire:loading.attr="disabled"
+            wire:loading.class="opacity-70 cursor-wait"
+            wire:target="save"
+            class="mt-4 inline-flex items-center justify-center gap-2 px-10 py-3 cursor-pointer rounded-xl bg-[#0F3C89] text-white text-sm font-medium hover:bg-blue-800 transition disabled:opacity-50">
+
+            <svg wire:loading wire:target="save" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+
+            <span wire:loading.remove wire:target="save">Save</span>
+            <span wire:loading wire:target="save">Saving...</span>
         </button>
     </div>
     @endunless

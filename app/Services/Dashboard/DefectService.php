@@ -27,7 +27,7 @@ class DefectService
             'type' => $row->defect,
             'qty' => (int)$row->total_qty,
             'dateEncode' => $row->latest_date,
-            'process' => $row->process,
+            'process' => $row->process ?? '',
             'isSub' => ProcessType::isSub($row->process),
         ]);
 

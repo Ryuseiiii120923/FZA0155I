@@ -48,10 +48,10 @@ new class extends Component
 
 <x-ui.wrapper.card-wrapper :readonly="$readonly">
     <div class="bg-gray-700 w-full">
-        <p class="text-4xl font-extrabold  text-center text-white p-4 ">Rework</p>
+        <p class="text-4xl font-extrabold text-center text-white p-4">Rework</p>
     </div>
     <div class="overflow-x-auto mt-3">
-        <table class=" table-auto w-full text-sm text-white bg-gray-800 rounded-lg overflow-hidden">
+        <table class="table-auto w-full text-sm text-white bg-gray-800 rounded-lg overflow-hidden">
             <thead class="bg-gray-900 text-white text-left">
                 <tr>
                     <th class="px-4 py-2">Inspector ID</th>
@@ -63,33 +63,39 @@ new class extends Component
                 </tr>
             </thead>
             <tbody class="bg-gray-700">
-                @forelse ($rework as $reworks)
-                @php $isSub = ! empty($reworks['isSub']); @endphp
-                <tr wire:key="rework-table-{{ $reworks['operatorid'] }}-{{ $reworks['type'] }}" @class(['bg-gray-600'=> $isSub])>
+                @forelse ($rework as $item)
+                @php
+                $isSub = ! empty($item['isSub']);
+                $operatorId = $item['operatorid'] ?? '';
+                $type = $item['type'] ?? '';
+                @endphp
+                <tr wire:key="rework-{{ $operatorId }}-{{ $type }}-{{ $loop->index }}"
+                    @class(['bg-gray-600'=> $isSub])>
                     <td class="px-4 py-2 {{ $isSub ? 'pl-10 border-l-4 border-blue-300' : '' }}">
-                        @if($isSub)↳ @endif{{ $reworks['operatorid'] }}
+                        @if($isSub)↳ @endif{{ $operatorId }}
                     </td>
+                    <td class="px-4 py-2">{{ $item['operatorname'] ?? '' }}</td>
                     <td class="px-4 py-2">
-                        {{ $defect['process'] }}
+                        {{ $type }}
                         @if($isSub)
                         <span class="ml-2 text-xs bg-blue-200 text-blue-900 px-2 py-0.5 rounded">
-                            Sub of {{ $defect['parentHfid'] ?? '-' }}
+                            Sub of {{ $item['parentHfid'] ?? '-' }}
                         </span>
                         @endif
                     </td>
-                    <td class="px-4 py-2">{{ $reworks['type'] }}</td>
-                    <td class="px-4 py-2">{{ $reworks['qty'] }}</td>
-                    <td class="px-4 py-2">{{ $reworks['totalinsp'] }}</td>
-                    <td class="px-4 py-2">{{ $reworks['dateEncode'] }}</td>
+                    <td class="px-4 py-2">{{ $item['qty'] ?? '' }}</td>
+                    <td class="px-4 py-2">{{ $item['totalinsp'] ?? '' }}</td>
+                    <td class="px-4 py-2">{{ $item['dateEncode'] ?? '' }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" class="px-6 py-4 text-center">No rework added yet.</td>
+                    <td colspan="6" class="px-6 py-4 text-center">No rework added yet.</td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
-        <div class="flex-col w-11/12 sm:w-1/3 mx-5 sm:mx-2 mt-3 ">
+
+        <div class="flex-col w-11/12 sm:w-1/3 mx-5 sm:mx-2 mt-3">
             <label for="TotalNgRework" class="block text-sm font-medium text-black">Total NG Rework</label>
             <input type="text" id="TotalNgRework" class="my-2 block w-full border border-black rounded-md px-2 py-1"
                 placeholder=" " required wire:model="totalNgRework" readonly>
