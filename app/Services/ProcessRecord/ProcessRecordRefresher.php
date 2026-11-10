@@ -23,14 +23,20 @@ class ProcessRecordRefresher
     public function refresh(int|string $ppf): array
     {
         $response = Http::withHeaders([
-                'X-API-Key' => config('services.process_record_api.key'),
-            ])
+            'X-API-Key' => config('services.process_record_api.key'),
+        ])
             ->acceptJson()
             ->connectTimeout(5)
             ->timeout(60)
             ->post(rtrim(config('services.process_record_api.base_url'), '/') . "/process-record/{$ppf}/refresh");
 
         if ($response->failed()) {
+            Log::warning('Process record API error', [
+                'ppf'    => $ppf,
+                'status' => $response->status(),
+                'body'   => $response->body(),
+            ]);
+
             throw new \RuntimeException(
                 "Failed to refresh process record for PPF {$ppf}: " . $response->json('message', $response->status())
             );
