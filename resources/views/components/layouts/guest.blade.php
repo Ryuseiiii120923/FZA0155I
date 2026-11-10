@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HF Defect</title>
     <link rel="icon" href="{{ asset('images/fuji_logo.ico') }}" type="image/x-icon">
