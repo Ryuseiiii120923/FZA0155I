@@ -6,6 +6,28 @@
     <title>HF Defect</title>
     <link rel="icon" href="{{ asset('images/fuji_logo.ico') }}" type="image/x-icon">
      @vite(['resources/css/app.css', 'resources/js/app.js'])
+     @livewireScripts
+    <script>
+        let isRedirecting = false;
+
+        Livewire.hook('request', ({
+            fail
+        }) => {
+            fail(({
+                status,
+                preventDefault
+            }) => {
+                if (status === 419) {
+                    preventDefault();
+
+                    if (!isRedirecting) {
+                        isRedirecting = true;
+                        window.location.href = '/login';
+                    }
+                }
+            });
+        });
+    </script>
 </head>
 <body>
     {{ $slot }}

@@ -43,6 +43,29 @@
             --sidebar-width: 64px;
         }
     </style>
+
+    @livewireScripts
+    <script>
+        let isRedirecting = false;
+
+        Livewire.hook('request', ({
+            fail
+        }) => {
+            fail(({
+                status,
+                preventDefault
+            }) => {
+                if (status === 419) {
+                    preventDefault();
+
+                    if (!isRedirecting) {
+                        isRedirecting = true;
+                        window.location.href = '/login';
+                    }
+                }
+            });
+        });
+    </script>
 </head>
 
 <body class="overflow-x-hidden font-sans">
