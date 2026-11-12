@@ -60,9 +60,9 @@
                     preventDefault();
 
                     if (!isRedirecting) {
-                        isRedirecting = true;
-                        window.location.href = '/login';
-                    }
+    isRedirecting = true;
+    window.location.href = "{{ route('login') }}";
+}
                 }
             });
         });

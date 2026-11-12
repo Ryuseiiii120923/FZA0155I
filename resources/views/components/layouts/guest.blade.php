@@ -21,10 +21,10 @@
                 if (status === 419) {
                     preventDefault();
 
-                    if (!isRedirecting) {
-                        isRedirecting = true;
-                        window.location.href = '/login';
-                    }
+                   if (!isRedirecting) {
+    isRedirecting = true;
+    window.location.href = "{{ route('login') }}";
+}
                 }
             });
         });

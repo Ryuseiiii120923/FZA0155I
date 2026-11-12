@@ -9,6 +9,7 @@
                 </p>
 
                 <form wire:submit="submitHostName" class="mt-4 space-y-3">
+                    @csrf
                     <div>
                         <input
                             type="text"
