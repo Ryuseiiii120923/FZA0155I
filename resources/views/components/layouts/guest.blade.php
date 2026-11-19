@@ -8,6 +8,7 @@
     <link rel="icon" href="{{ asset('images/fuji_logo.ico') }}" type="image/x-icon">
      @vite(['resources/css/app.css', 'resources/js/app.js'])
      @livewireScripts
+
     <script>
         let isRedirecting = false;
 

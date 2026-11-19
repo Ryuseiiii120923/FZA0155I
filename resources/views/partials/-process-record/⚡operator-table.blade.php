@@ -25,7 +25,7 @@ new class extends Component
 
     public function editPPF(int $ppf)
     {
-        $this->dispatch('confirm-ppf', ppf: $ppf, encoder: $this->userEncoder, readonly: false, isDefectEncoding : true);
+        $this->dispatch('confirm-ppf', ppf: $ppf, encoder: $this->userEncoder, readonly: false, isDefectEncoding: true);
         $this->dispatch('read-only', readonly: false);
     }
 
@@ -59,7 +59,17 @@ new class extends Component
     #[Computed]
     public function ppfRecord()
     {
-        return app(ProcessRecordService::class)->fetchProcessRecordData($this->userEncoder,$this->search );
+        return app(ProcessRecordService::class)->fetchProcessRecordData($this->userEncoder, $this->search);
+    }
+
+    public ?string $deviceUuid = null;
+
+    public function updatedDeviceUuid($value)
+    {
+        logger()->info('Device connected', [
+            'uuid' => $value,
+            'ip'   => request()->ip(),
+        ]);
     }
 };
 ?>
